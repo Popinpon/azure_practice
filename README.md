@@ -17,11 +17,10 @@ NAT Gateway を構築します。
 
 ## アーキテクチャ
 
-![アーキテクチャ図](docs/architecture.svg)
+Agentの送信元IPをNAT Gatewayで固定し、受信・内部通信・送信の3経路に分けて構成している。
+図と各経路の詳細は [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) を参照。
 
-- **青**: 管理者PC → AI Foundry パブリックエンドポイント(`admin_source_cidr` のみ許可)
-- **グレー破線**: Agent runtime ↔ Cosmos DB / AI Search / Storage(Private Link・VNet内部)
-- **オレンジ**: Agent runtime → NAT Gateway → MCPサーバー(送信元IP固定。この検証の本題)
+![アーキテクチャ図](docs/architecture.svg)
 
 ## 前提
 
@@ -109,8 +108,8 @@ terraform destroy
 
 ## 補足・既知の制限
 
-- Standard Agent Setup は仕様上 Cosmos DB / AI Search / Storage Account が必須です(使うツールに
-  関わらず)。詳細: https://learn.microsoft.com/azure/foundry/agents/concepts/standard-agent-setup
+- なぜCosmos DB / AI Search / Storage Accountが必須なのかは
+  [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) を参照。
 - Cosmos DB は AVM モジュール経由だと Serverless 化ができないため、`cosmosdb.tf` で自前作成し
   `existing_resource_id` として渡しています。
 - モデルのデプロイに失敗する場合は `variables.tf` の `model_name` / `model_version` /
