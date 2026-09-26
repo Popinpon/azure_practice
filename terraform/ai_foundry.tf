@@ -1,6 +1,6 @@
 # Azure AI FoundryアカウントとStandard Agent Setup。
 # - 受信: パブリックエンドポイントは有効だが、network_aclsで
-#   admin_source_cidrに制限している。踏み台VMなしで自分の端末から
+#   allowed_source_cidrに制限している。踏み台VMなしで自分の端末から
 #   直接呼べる。Agentランタイム自身がアカウントにアクセスするために
 #   Private Endpointも併設(create_private_endpoints = true)している。
 # - 送信(この検証の本題): create_ai_agent_service + network_injectionsで
@@ -37,14 +37,14 @@ module "ai_foundry" {
     private_dns_zone_resource_ids = [
       for name in local.ai_foundry_dns_zone_names : azurerm_private_dns_zone.this[name].id
     ]
-    # パブリックエンドポイントは有効だがadmin_source_cidrに固定。
+    # パブリックエンドポイントは有効だがallowed_source_cidrに固定。
     # 踏み台なしで直接呼べる一方、それ以外からは拒否する。
     # Cognitive Servicesのnetwork_acls.ip_rulesは/31・/32のCIDRを受け付けない
-    # ため、admin_source_cidrがCIDR表記でもIP部分だけを渡す。
+    # ため、allowed_source_cidrがCIDR表記でもIP部分だけを渡す。
     public_network_access_enabled = true
     network_acls = {
       default_action = "Deny"
-      ip_rules       = [split("/", var.admin_source_cidr)[0]]
+      ip_rules       = [split("/", var.allowed_source_cidr)[0]]
     }
   }
 

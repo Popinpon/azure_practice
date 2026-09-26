@@ -15,7 +15,7 @@ Microsoft公式の Azure Architecture Icons(draw.io 同梱ライブラリ)を使
 ### ① 管理者 → AI Foundry(パブリック・IP許可)
 
 AI Foundry のパブリックエンドポイントは有効にしたまま、`network_acls` で
-`admin_source_cidr` 以外からの接続を拒否している。動作確認用の踏み台VMを用意しなくても、
+`allowed_source_cidr` 以外からの接続を拒否している。動作確認用の踏み台VMを用意しなくても、
 手元の端末から直接 Agent API / Foundry Portal を呼べる。
 
 ### ② Agent runtime ↔ 自前で用意して使わせるリソース(Private Link・VNet内部)
@@ -53,7 +53,7 @@ MCP サーバー側は、この NAT Gateway の Public IP(`terraform output nat_
 
 ## 図中の凡例
 
-- **青**: 管理者PC → AI Foundry パブリックエンドポイント(`admin_source_cidr` のみ許可)
+- **青**: 管理者PC → AI Foundry パブリックエンドポイント(`allowed_source_cidr` のみ許可)
 - **グレー破線**: Agent runtime ↔ Cosmos DB / AI Search / Storage(Private Link・VNet内部)
 - **オレンジ**: Agent runtime → NAT Gateway → MCPサーバー(送信元IP固定)
 

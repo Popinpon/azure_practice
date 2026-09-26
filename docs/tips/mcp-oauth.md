@@ -10,7 +10,7 @@
 **Agent runtimeのネットワーク経路(`snet-agent` → NAT Gateway)を一切通らない**。
 単にユーザーの手元PCのブラウザがMCPサーバーの認可エンドポイントに直接アクセスするだけ
 なので、MCPサーバー側のアクセスログにはNAT GatewayのIPではなく、consentした人の
-手元のIP(=`admin_source_cidr`で許可しているIP)が記録される。
+手元のIP(=`allowed_source_cidr`で許可しているIP)が記録される。
 
 このリポジトリの検証目的である「送信元IP固定」を確認する際は、**実際にAgentがMCP
 ツールを呼び出した通信のログだけ**を見ること。consentアクセス時のログにNAT Gateway

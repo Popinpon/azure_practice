@@ -16,6 +16,6 @@ output "nat_gateway_public_ip" {
 }
 
 output "ai_foundry_endpoint" {
-  description = "AI Foundryアカウントのパブリックエンドポイント。admin_source_cidrからのみ到達可能。"
+  description = "AI Foundryアカウントのパブリックエンドポイント。allowed_source_cidrからのみ到達可能。"
   value       = "https://${module.ai_foundry.ai_foundry_name}.services.ai.azure.com/"
 }

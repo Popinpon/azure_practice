@@ -9,7 +9,7 @@ variable "resource_group_name" {
   description = "デプロイ先の既存リソースグループ名。local.auto.tfvarsで指定する。"
 }
 
-variable "admin_source_cidr" {
+variable "allowed_source_cidr" {
   type        = string
   description = "AI FoundryアカウントのパブリックエンドポイントへのアクセスをこのCIDRからのみ許可する(例: 203.0.113.5/32)。local.auto.tfvarsで指定する。"
 }

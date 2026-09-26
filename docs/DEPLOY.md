@@ -61,10 +61,10 @@ cp local.auto.tfvars.example local.auto.tfvars
 ```hcl
 # subscription_id     = "00000000-0000-0000-0000-000000000000"  # 未指定ならaz cliの現在のサブスクリプション
 resource_group_name = "rg-hogehoge"
-admin_source_cidr   = "203.0.113.5/32"   # 自分のグローバルIP(curl -s https://ifconfig.me)に/32を付けたもの
+allowed_source_cidr = "203.0.113.5/32"   # 自分のグローバルIP(curl -s https://ifconfig.me)に/32を付けたもの
 ```
 
-IPが変わってアクセスできなくなった場合は、`admin_source_cidr` を更新して再度 `terraform apply` してください。
+IPが変わってアクセスできなくなった場合は、`allowed_source_cidr` を更新して再度 `terraform apply` してください。
 
 ## デプロイ
 
@@ -82,11 +82,11 @@ Standard Agent Setup(AI Foundryアカウント本体)の作成には時間がか
 ## 動作確認 (送信元IP固定のテスト)
 
 1. `terraform output nat_gateway_public_ip` で固定IPを確認し、検証用MCPサーバー側の許可リストに登録
-2. `terraform output ai_foundry_endpoint` のエンドポイントに対し、`admin_source_cidr` の端末から
+2. `terraform output ai_foundry_endpoint` のエンドポイントに対し、`allowed_source_cidr` の端末から
    Foundry Agent SDK / REST API でMCPツールを設定したAgentを作成・実行
 3. MCPサーバー側のアクセスログを確認し、送信元IPが `nat_gateway_public_ip` と一致することを確認
 
-`admin_source_cidr` 以外のIPから同じエンドポイントを叩くと拒否されることも合わせて確認してください。
+`allowed_source_cidr` 以外のIPから同じエンドポイントを叩くと拒否されることも合わせて確認してください。
 AgentのMCPツールをOAuth認可コード方式で接続する場合のハマりどころは
 [docs/tips/mcp-oauth.md](tips/mcp-oauth.md) を参照してください。
 

@@ -8,7 +8,7 @@ NAT Gateway を構築します。
 
 - 公式 AVM パターンモジュール `Azure/avm-ptn-aiml-ai-foundry/azurerm` を使用
 - AI Foundry アカウント (kind=AIServices) + Project + モデルデプロイ (既定: `gpt-6-luna`)
-  - 受信: パブリックエンドポイント有効・`admin_source_cidr` からのみ許可(network ACLs)。
+  - 受信: パブリックエンドポイント有効・`allowed_source_cidr` からのみ許可(network ACLs)。
     Private Endpoint も併設(Agentランタイム自身のアクセス用)
   - 送信: Agentランタイムを `snet-agent`(VNet injection)に配置し、既定の送信経路を無効化。
     NAT Gateway 経由に強制することで、MCPサーバーへの送信元IPを固定
@@ -20,7 +20,7 @@ NAT Gateway を構築します。
 > [公式ドキュメント](https://learn.microsoft.com/ja-jp/azure/foundry/agents/how-to/virtual-networks)は
 > VNet内部からのアクセス手段としてAzure Bastion(踏み台VM) / VPN Gateway / ExpressRouteを前提に
 > しているが、本リポジトリはコストと手間を優先し、踏み台VMを置かずAI Foundryのパブリック
-> エンドポイントを`admin_source_cidr`のIP制限のみで直接開放している(詳細は
+> エンドポイントを`allowed_source_cidr`のIP制限のみで直接開放している(詳細は
 > [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) の①)。厳密な閉域性が必要な本番用途では
 > 公式ガイドの通りBastion等を使う構成に変更してください。
 

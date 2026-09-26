@@ -6,7 +6,7 @@ Azure運用寄りのTipsは [azure.md](azure.md) を参照。
 
 ### Cognitive Servicesの `network_acls.ip_rules` は `/31`・`/32` のCIDRを受け付けない
 
-`admin_source_cidr`(例: `203.0.113.5/32`)をそのまま `ip_rules` に渡すと、apply時に
+`allowed_source_cidr`(例: `203.0.113.5/32`)をそのまま `ip_rules` に渡すと、apply時に
 以下のエラーになる。
 
 ```
@@ -21,7 +21,7 @@ Azure Cognitive Services の `networkAcls.ipRules` は `/31`・`/32` プレフ�
 個別IPを許可したい場合はCIDRのスラッシュ部分を取り除き、素のIPアドレスとして渡す必要がある。
 
 ```hcl
-ip_rules = [split("/", var.admin_source_cidr)[0]]
+ip_rules = [split("/", var.allowed_source_cidr)[0]]
 ```
 
 (`ai_foundry.tf` で対応済み)
