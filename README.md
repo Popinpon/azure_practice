@@ -124,5 +124,5 @@ terraform destroy
 - モデルのデプロイに失敗する場合は `variables.tf` の `model_name` / `model_version` /
   `model_capacity` を利用可能なものに変更してください。
 - 実装中に遭遇したハマりどころ(エラーメッセージと回避策)は
-  [docs/NOTES_TERRAFORM.md](docs/NOTES_TERRAFORM.md)(Terraform/AVMモジュール)・
-  [docs/NOTES_AZURE.md](docs/NOTES_AZURE.md)(Azure運用)にまとめてあります。
+  [docs/tips/terraform.md](docs/tips/terraform.md)(Terraform/AVMモジュール)・
+  [docs/tips/azure.md](docs/tips/azure.md)(Azure運用)にまとめてあります。

@@ -2,7 +2,7 @@
 
 このリポジトリを作る過程で分かった、`README.md` / `ARCHITECTURE.md` には書いていない
 Azureサービス自体の挙動・運用面の知見をまとめる。Terraform/AVMモジュール周りの
-ハマりどころは [NOTES_TERRAFORM.md](NOTES_TERRAFORM.md) を参照。
+ハマりどころは [terraform.md](terraform.md) を参照。
 
 ### モデルの実際の提供状況は `az cognitiveservices model list` で確認するのが確実
 

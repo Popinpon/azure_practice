@@ -2,7 +2,7 @@
 
 このリポジトリを作る過程で分かった、`README.md` / `ARCHITECTURE.md` には書いていない
 Terraform・AVMモジュール周りの実装上の知見・トラブルシューティングをまとめる。
-Azure運用寄りのTipsは [NOTES_AZURE.md](NOTES_AZURE.md) を参照。
+Azure運用寄りのTipsは [azure.md](azure.md) を参照。
 
 ### Cognitive Servicesの `network_acls.ip_rules` は `/31`・`/32` のCIDRを受け付けない
 
