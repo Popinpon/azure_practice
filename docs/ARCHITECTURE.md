@@ -49,3 +49,11 @@ MCP サーバー側は、この NAT Gateway の Public IP(`terraform output nat_
 
 図中のアイコンはAzure公式アセットではなく、サービスカテゴリの配色
 (AI = マゼンタ系、Networking = 青系)に準拠した簡易ピクトグラム。
+
+## 参考
+
+- [Set up standard agent resources for Foundry Agent Service](https://learn.microsoft.com/azure/foundry/agents/concepts/standard-agent-setup) —
+  BYOリソース(Storage / AI Search / Cosmos DB)がなぜ必須なのかの一次情報
+- [Foundry Agent Service のプライベート ネットワークを設定する](https://learn.microsoft.com/ja-jp/azure/foundry/agents/how-to/virtual-networks) —
+  VNet injection・サブネット委任・DNSゾーン構成(本リポジトリの6ゾーンと対応)・
+  Bastion/VPN/ExpressRouteでのアクセス方法・トラブルシューティングまで一次情報として詳しい
