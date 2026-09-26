@@ -1,8 +1,10 @@
 # AI Foundry ⇔ MCPサーバー(OAuth認可コード)接続のTips
 
 デプロイ後にAgentのMCPツールをOAuth認可コード方式(Microsoft Entra ID)のMCPサーバーに
-繋ぐ際に分かった、公式ドキュメントだけでは分かりにくい知見をまとめる。Azure/Terraform
-自体のTipsは [azure.md](azure.md) / [terraform.md](terraform.md) を参照。
+繋ぐ際に分かった、公式ドキュメントだけでは分かりにくい知見をまとめる。設定手順自体は
+[../mcp-foundry-setup.md](../mcp-foundry-setup.md)、MCPサーバー側でEntra IDアプリを
+登録・運用する際の注意点は[mcp-server-entra-id.md](mcp-server-entra-id.md)、
+Azure/Terraform自体のTipsは [azure.md](azure.md) / [terraform.md](terraform.md) を参照。
 
 ### OAuth認可(consent)とMCPツール呼び出しは別経路 — NAT Gatewayを通るのは後者だけ
 
@@ -75,15 +77,10 @@ curl -s https://<mcpサーバーのホスト名>/.well-known/oauth-protected-res
 
 FoundryのCustom OAuth設定を保存すると、その場でredirect URLが発行される。
 Entra側のアプリ登録には、この発行された値をそのまま追加登録する必要があり、
-自分で好きなURLを決めて先に登録しておく、ということはできない。
-
-進める順番:
-
-1. Entraアプリ側でプラットフォーム = **Web**(クライアントシークレットを使う
-   confidential clientなので。SPAや「モバイル/デスクトップ」は不可)を追加。
-   リダイレクトURIが必須項目なら一旦ダミー値(`https://localhost`等)でよい
-2. Foundry PortalでCustom OAuthの各値を入力して保存 → redirect URLが発行される
-3. ②の値をEntraアプリのリダイレクトURIに上書き登録
+自分で好きなURLを決めて先に登録しておく、ということはできない。つまりEntra側の
+アプリ登録(リダイレクトURI以外)→Foundry側の設定→Entra側にredirect URLを追加、
+という順番が必須になる。具体的な手順は[../mcp-foundry-setup.md](../mcp-foundry-setup.md)
+を参照。
 
 ### (参考) Microsoftの既知オーディエンス宛のトークンはサードパーティMCPサーバーに渡せない
 

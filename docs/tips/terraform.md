@@ -113,3 +113,24 @@ AI Foundryアカウント(Cognitive Services)はソフトデリートされる�
 `destroy` → 修正 → `apply` を繰り返すと、同名アカウントが論理削除された状態のまま残り、
 再作成時に409で失敗することがある。`azapi_resource_action`(`when = "destroy"`)で
 destroy時に自動パージするリソースを仕込んでおくと安全(`ai_foundry.tf` 参照)。
+
+### Projectが一度Capability Hostを持つと、BYORリソースの接続先を後から差し替えられない
+
+`cosmosdb_definition`/`ai_projects.cosmos_db_connection`の`existing_resource_id`を
+別のCosmos DBアカウントに変更してapplyすると(例: 名前衝突回避のためにCosmos DBの
+名前生成ロジックを変えた場合)、以下のエラーになる。
+
+```
+Error: creating/updating Resource ...
+"code": "UserError",
+"message": "Connection 'closed-project-xxxxxx' is in use by the workspace
+ capability host and cannot be deleted through the connections API.
+ Update the owning capabilitySettings value instead."
+```
+
+Standard Agent Setupで一度Agent Capability Host(`create_ai_agent_service = true`)が
+作られると、そのProjectが使うCosmos DB/AI Search/Storageの接続は**Connections APIから
+削除できなくなる**(公式ドキュメントにも「capability settings on an existing project は
+更新不可、変えたいならProjectごと作り直す」と明記されている)。Cosmos DB側の名前や
+リソース自体を変えたい場合は、Cosmos DBだけでなく**Projectごと**作り直す必要がある。
+既存の動いている環境に対しては、影響範囲を考えると多くの場合やる価値がない。

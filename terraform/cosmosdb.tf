@@ -11,6 +11,11 @@
 # 渡せる。代わりに azurerm_cosmosdb_account.this.id を使うと、plan時点では
 # 未確定(unknown)になり、モジュール側のfor_eachが壊れる。
 locals {
+  # 本当はsubscription_idもハッシュの種に含めて衝突耐性を上げたいところだが、
+  # Projectが一度Capability Hostを持つとcosmos_db_connectionの差し替えができない
+  # (「in use by the workspace capability host」でAPIから拒否される。Project自体の
+  # 作り直しが必要)ため、既存デプロイへの影響が大きすぎると判断して見送っている。
+  # 詳細: docs/tips/terraform.md
   cosmosdb_name = "cosmos-${var.base_name}-${substr(sha1("${var.resource_group_name}-${var.base_name}-cosmos"), 0, 8)}"
   cosmosdb_id   = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${data.azurerm_resource_group.this.name}/providers/Microsoft.DocumentDB/databaseAccounts/${local.cosmosdb_name}"
 }
