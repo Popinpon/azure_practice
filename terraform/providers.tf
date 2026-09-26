@@ -1,6 +1,7 @@
-# Authenticates using the Azure CLI's current session (az login).
-# subscription_id defaults to null, which falls back to `az account show`'s
-# current subscription; set it explicitly via local.auto.tfvars to pin it.
+# Azure CLIの現在のログインセッション(az login)で認証する。
+# subscription_idの既定値はnullで、その場合`az account show`の現在の
+# サブスクリプションにフォールバックする。固定したい場合は
+# local.auto.tfvarsで明示的に指定する。
 provider "azurerm" {
   subscription_id     = var.subscription_id
   storage_use_azuread = true

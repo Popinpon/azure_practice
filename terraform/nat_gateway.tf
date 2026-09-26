@@ -1,6 +1,6 @@
-# Fixes the outbound (egress) source IP of everything in snet-agent —
-# i.e. the Foundry agent runtime's calls to external MCP servers — to this
-# single static IP, so the MCP server can allow-list it.
+# snet-agent内すべての送信(egress)元IPを、この1つの固定IPにする。
+# つまりFoundry Agentランタイムが外部のMCPサーバーへ送る通信の送信元IPを
+# 固定し、MCPサーバー側で許可リストに登録できるようにする。
 resource "azurerm_public_ip" "nat" {
   name                = "pip-${var.base_name}-nat"
   location            = var.location

@@ -11,11 +11,11 @@ output "ai_foundry_project_id" {
 }
 
 output "nat_gateway_public_ip" {
-  description = "Fixed source IP the Foundry agent uses for all outbound calls (e.g. to the MCP server). Give this to the MCP server owner to allow-list."
+  description = "Foundry Agentがすべての送信(MCPサーバー宛など)に使う固定送信元IP。MCPサーバー側の許可リストに登録する値。"
   value       = azurerm_public_ip.nat.ip_address
 }
 
 output "ai_foundry_endpoint" {
-  description = "Public endpoint for the AI Foundry account, reachable only from admin_source_cidr."
+  description = "AI Foundryアカウントのパブリックエンドポイント。admin_source_cidrからのみ到達可能。"
   value       = "https://${module.ai_foundry.ai_foundry_name}.services.ai.azure.com/"
 }

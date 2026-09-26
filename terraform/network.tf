@@ -5,7 +5,7 @@ resource "azurerm_virtual_network" "this" {
   address_space       = var.vnet_address_space
 }
 
-# Subnet dedicated to private endpoints (AI Foundry account)
+# Private Endpoint専用のサブネット(AI Foundryアカウント用)
 resource "azurerm_subnet" "private_endpoints" {
   name                 = "snet-private-endpoints"
   resource_group_name  = data.azurerm_resource_group.this.name
@@ -13,10 +13,10 @@ resource "azurerm_subnet" "private_endpoints" {
   address_prefixes     = [var.private_endpoint_subnet_prefix]
 }
 
-# Subnet for the Foundry Standard Agent Setup (network-injected agent runtime).
-# default_outbound_access_enabled = false removes Azure's implicit default
-# outbound path, forcing all egress through the attached NAT Gateway so the
-# source IP towards the MCP server is always the NAT Gateway's static IP.
+# Foundry Standard Agent Setup用サブネット(VNet injectionされたAgentランタイム)。
+# default_outbound_access_enabled = false でAzureの暗黙の既定送信経路を
+# 無効化し、すべての送信をアタッチしたNAT Gateway経由に強制する。これに
+# より、MCPサーバーへの送信元IPは常にNAT Gatewayの固定IPになる。
 resource "azurerm_subnet" "agent" {
   name                            = "snet-agent"
   resource_group_name             = data.azurerm_resource_group.this.name

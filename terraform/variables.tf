@@ -1,40 +1,40 @@
 variable "subscription_id" {
   type        = string
   default     = null
-  description = "Azure subscription ID. Set in local.auto.tfvars; null falls back to `az account show`'s current subscription."
+  description = "AzureサブスクリプションID。local.auto.tfvarsで指定する。nullの場合は`az account show`の現在のサブスクリプションにフォールバックする。"
 }
 
 variable "resource_group_name" {
   type        = string
-  description = "Name of the existing resource group to deploy into. Set in local.auto.tfvars."
+  description = "デプロイ先の既存リソースグループ名。local.auto.tfvarsで指定する。"
 }
 
 variable "admin_source_cidr" {
   type        = string
-  description = "CIDR allowed to call the AI Foundry account's public endpoint directly (e.g. 203.0.113.5/32). Set in local.auto.tfvars."
+  description = "AI FoundryアカウントのパブリックエンドポイントへのアクセスをこのCIDRからのみ許可する(例: 203.0.113.5/32)。local.auto.tfvarsで指定する。"
 }
 
 variable "location" {
   type        = string
   default     = "japaneast"
-  description = "Azure region. Must match the existing resource group's region."
+  description = "Azureリージョン。既存リソースグループと同じリージョンにすること。"
 }
 
 variable "base_name" {
   type        = string
   default     = "closed"
-  description = "Short name prefix used for AI Foundry resource naming (3-9 chars, lowercase alphanumeric/hyphen)."
+  description = "AI Foundryリソース名に使う短いプレフィックス(3〜9文字、小文字英数字とハイフン)。"
 
   validation {
     condition     = can(regex("^[a-z0-9][a-z0-9-]{1,7}[a-z0-9]$", var.base_name))
-    error_message = "base_name must be 3-9 chars, lowercase letters/digits/hyphens, starting and ending with an alphanumeric char."
+    error_message = "base_nameは3〜9文字、小文字英数字とハイフンのみで、先頭と末尾は英数字にしてください。"
   }
 }
 
 variable "vnet_address_space" {
   type        = list(string)
   default     = ["10.20.0.0/16"]
-  description = "Address space for the VNet."
+  description = "VNetのアドレス空間。"
 }
 
 variable "private_endpoint_subnet_prefix" {
@@ -45,19 +45,19 @@ variable "private_endpoint_subnet_prefix" {
 variable "agent_subnet_prefix" {
   type        = string
   default     = "10.20.2.0/27"
-  description = "Subnet for the Foundry Standard Agent Setup (delegated to Microsoft.App/environments, /27 or larger). All agent egress is forced through the NAT Gateway attached here."
+  description = "Foundry Standard Agent Setup用サブネット(Microsoft.App/environments委任、/27以上)。Agentの送信はすべてここにアタッチしたNAT Gateway経由に強制される。"
 }
 
 variable "mcp_server_url" {
   type        = string
   default     = ""
-  description = "MCP server endpoint the agent will call, used only in the test script (not a Terraform resource). Set via TF_VAR_mcp_server_url."
+  description = "Agentが呼び出すMCPサーバーのエンドポイント。Terraformリソースではなく、動作確認スクリプトでのみ使用する。TF_VAR_mcp_server_urlで指定する。"
 }
 
 variable "model_name" {
   type        = string
   default     = "gpt-6-luna"
-  description = "Model to deploy on the AI Foundry account for testing."
+  description = "AI Foundryアカウントにデプロイする検証用モデル。"
 }
 
 variable "model_version" {

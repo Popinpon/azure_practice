@@ -1,4 +1,4 @@
-# Use the existing resource group instead of creating a new one.
+# 新規作成せず、既存のリソースグループを参照する。
 data "azurerm_resource_group" "this" {
   name = var.resource_group_name
 }

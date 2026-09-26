@@ -1,13 +1,13 @@
-# Azure AI Foundry account + Standard Agent Setup.
-# - Inbound: public endpoint is enabled but restricted to admin_source_cidr
-#   via network_acls, so it can be called directly from your machine without
-#   a jump box. A private endpoint is also kept (create_private_endpoints =
-#   true) for the agent runtime's own access to the account.
-# - Outbound (the actual point of this exercise): create_ai_agent_service +
-#   network_injections places the agent runtime in snet-agent, which has no
-#   default outbound access and is forced through nat_gateway.tf's NAT
-#   Gateway. All calls the agent makes to external MCP servers therefore
-#   originate from that NAT Gateway's static public IP.
+# Azure AI FoundryアカウントとStandard Agent Setup。
+# - 受信: パブリックエンドポイントは有効だが、network_aclsで
+#   admin_source_cidrに制限している。踏み台VMなしで自分の端末から
+#   直接呼べる。Agentランタイム自身がアカウントにアクセスするために
+#   Private Endpointも併設(create_private_endpoints = true)している。
+# - 送信(この検証の本題): create_ai_agent_service + network_injectionsで
+#   Agentランタイムをsnet-agentに配置している。このサブネットは既定の
+#   送信経路を持たず、nat_gateway.tfのNAT Gateway経由に強制される。
+#   そのためAgentが外部のMCPサーバーへ送る通信は、すべてこのNAT
+#   GatewayのPublic IPを送信元にする。
 data "azurerm_client_config" "current" {}
 
 locals {
@@ -37,8 +37,8 @@ module "ai_foundry" {
     private_dns_zone_resource_ids = [
       for name in local.ai_foundry_dns_zone_names : azurerm_private_dns_zone.this[name].id
     ]
-    # Public endpoint enabled but locked to admin_source_cidr, so it can be
-    # called directly (no jump box needed) while still blocking everyone else.
+    # パブリックエンドポイントは有効だがadmin_source_cidrに固定。
+    # 踏み台なしで直接呼べる一方、それ以外からは拒否する。
     public_network_access_enabled = true
     network_acls = {
       default_action = "Deny"
@@ -73,9 +73,9 @@ module "ai_foundry" {
     }
   }
 
-  # sku/replica_count overridden from the module defaults (standard x2
-  # replicas ~= $500/mo) down to the cheapest tier that still supports
-  # private endpoints, since this is a throwaway test deployment.
+  # sku/replica_countはモジュールの既定値(standard x replica 2、月$500程度)
+  # から、Private Endpointに対応する範囲で最安のティアに変更している。
+  # 使い捨ての検証環境のため。
   ai_search_definition = {
     this = {
       private_dns_zone_resource_id = azurerm_private_dns_zone.this["privatelink.search.windows.net"].id
@@ -84,10 +84,10 @@ module "ai_foundry" {
     }
   }
 
-  # Bring our own Cosmos DB (cosmosdb.tf) instead of letting the module
-  # create one, so it can run in Serverless mode (pay-per-request, no
-  # provisioned-throughput minimum). Its private endpoint is also created
-  # in cosmosdb.tf since the module skips that step for existing resources.
+  # モジュールに作らせず、自前のCosmos DB(cosmosdb.tf)を持ち込む(BYOR)。
+  # Serverlessモード(リクエスト従量課金、プロビジョンドスループットの
+  # 下限なし)にするため。Private Endpointも、モジュールが既存リソース
+  # に対してはこのステップをスキップするのでcosmosdb.tf側で作成している。
   cosmosdb_definition = {
     this = {
       existing_resource_id = local.cosmosdb_id
@@ -113,9 +113,9 @@ module "ai_foundry" {
   ]
 }
 
-# Purge a soft-deleted account of the same name before (re)creating it, and
-# after destroying it — otherwise a destroy/apply cycle during iteration on
-# this config can hit a 409 conflict on the account name.
+# 同名アカウントがソフトデリート状態で残っていると(再)作成できないため、
+# 作成前・destroy後にパージする。このコードを試行錯誤する中で
+# destroy→apply を繰り返すと、アカウント名の409コンフリクトに当たるため。
 resource "time_sleep" "purge_ai_foundry_cooldown" {
   destroy_duration = "20m"
 

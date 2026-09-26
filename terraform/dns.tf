@@ -1,11 +1,11 @@
-# AI Foundry (the unified "AIServices" account) resolves through three
-# private-link zones depending on which API surface is used.
+# AI Foundry (統合されたAIServicesアカウント) は、使うAPI面によって
+# 3つのprivate-linkゾーンのいずれかで名前解決される。
 locals {
   private_dns_zone_names = [
     "privatelink.services.ai.azure.com",
     "privatelink.openai.azure.com",
     "privatelink.cognitiveservices.azure.com",
-    # Required for the Standard Agent Setup's BYOR dependencies.
+    # Standard Agent SetupのBYOR依存リソース用に必要。
     "privatelink.documents.azure.com",   # Cosmos DB
     "privatelink.search.windows.net",    # Azure AI Search
     "privatelink.blob.core.windows.net", # Storage Account

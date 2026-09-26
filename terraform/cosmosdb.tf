@@ -1,15 +1,14 @@
-# Created directly (instead of via the ai_foundry module's built-in BYOR
-# path) so it can run in Serverless mode. The AVM module doesn't currently
-# wire a `capabilities`/serverless option through, and Standard Agent Setup's
-# provisioned-throughput floor (>=3000 RU/s) would otherwise cost real money
-# if left running. Serverless is pay-per-request with no minimum.
+# ai_foundryモジュール内蔵のBYOR経由ではなく、直接ここで作成することで
+# Serverlessモードにできるようにしている。AVMモジュールは現状
+# `capabilities`(サーバーレス化)を配線しておらず、Standard Agent Setupの
+# プロビジョンドスループット下限(3000 RU/s以上)をそのまま使うと放置時に
+# 実費が発生する。Serverlessならリクエスト従量課金で最低料金がない。
 #
-# The name/id are derived only from static inputs (not from another
-# resource's computed output) so the ID can be passed to the ai_foundry
-# module's `existing_resource_id` and be known at plan time, even on a
-# first-ever apply before this account exists yet. Using
-# azurerm_cosmosdb_account.this.id there instead would be unknown at plan
-# time and break the module's for_each.
+# name/idは(他リソースの計算結果ではなく)静的な入力のみから導出している。
+# こうすることで、このアカウントがまだ存在しない初回applyの時点でも、
+# ai_foundryモジュールの`existing_resource_id`にplan時点で確定した値を
+# 渡せる。代わりに azurerm_cosmosdb_account.this.id を使うと、plan時点では
+# 未確定(unknown)になり、モジュール側のfor_eachが壊れる。
 locals {
   cosmosdb_name = "cosmos-${var.base_name}-${substr(sha1("${var.resource_group_name}-${var.base_name}-cosmos"), 0, 8)}"
   cosmosdb_id   = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${data.azurerm_resource_group.this.name}/providers/Microsoft.DocumentDB/databaseAccounts/${local.cosmosdb_name}"
