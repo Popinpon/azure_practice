@@ -7,3 +7,5 @@ tfplan
 *.tfplan
 crash.log
 notes/*
+*.env
+.DS_Store

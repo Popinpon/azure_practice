@@ -5,6 +5,12 @@ Foundry Agent(MCPツール呼び出し)の送信元IPを固定し、MCPサーバ
 
 ![アーキテクチャ図](architecture.svg)
 
+編集用の draw.io ソース([architecture.drawio](architecture.drawio))も用意した。
+Microsoft公式の Azure Architecture Icons(draw.io 同梱ライブラリ)を使っており、
+[draw.io](https://app.diagrams.net/) や VS Code の Draw.io Integration 拡張で開いて編集できる。
+上の `architecture.svg` はこのファイルとは別の手描きSVGなので、公式アイコン版に差し替えたい場合は
+`architecture.drawio` を開いて内容を確認のうえ SVG としてエクスポートし、`architecture.svg` を置き換えること。
+
 ## 通信経路
 
 ### ① 管理者 → AI Foundry(パブリック・IP許可)
