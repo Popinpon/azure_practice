@@ -22,10 +22,15 @@ AI Foundry のパブリックエンドポイントは有効にしたまま、`ne
 
 Agent の会話履歴・スレッド・エージェント定義(Cosmos DB)、ベクトルストア(AI Search)、
 アップロードファイル(Storage Account)は、Microsoft管理ではなく**自分のサブスクリプションに
-自前で用意して使わせる**必要がある(業界では BYOR = Bring Your Own リソース と呼ばれる)。
+自前で用意して使わせる**必要がある(BYOR = Bring Your Own リソース と呼ばれる)。
 Standard Agent Setup の必須リソースで、これらはパブリックアクセスを一切許可しておらず、
 Private Endpoint 経由でのみ到達できる。
 `snet-agent` からは同一 VNet 内の `snet-private-endpoints` に直接ルーティングされる。
+
+これらのPrivate Endpointに到達できるのは、VNetにリンクされた Private DNS Zone
+(`privatelink.*.azure.com` 系、本リポジトリでは6ゾーン)が各サービスのFQDNを
+プライベートIPに解決しているため。DNSゾーンがなければ名前解決自体ができず、
+Private Endpointを作っても到達できない。
 
 これらは MCP を呼ぶかどうかに関わらず、Standard Agent Setup(= VNet injection)を使う以上
 必須のリソースになる。詳細: [Set up standard agent resources for Foundry Agent Service](https://learn.microsoft.com/azure/foundry/agents/concepts/standard-agent-setup)
@@ -51,9 +56,6 @@ MCP サーバー側は、この NAT Gateway の Public IP(`terraform output nat_
 - **青**: 管理者PC → AI Foundry パブリックエンドポイント(`admin_source_cidr` のみ許可)
 - **グレー破線**: Agent runtime ↔ Cosmos DB / AI Search / Storage(Private Link・VNet内部)
 - **オレンジ**: Agent runtime → NAT Gateway → MCPサーバー(送信元IP固定)
-
-図中のアイコンはAzure公式アセットではなく、サービスカテゴリの配色
-(AI = マゼンタ系、Networking = 青系)に準拠した簡易ピクトグラム。
 
 ## 参考
 
