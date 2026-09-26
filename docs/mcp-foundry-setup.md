@@ -9,6 +9,14 @@ MCPサーバー側でEntra IDアプリを登録・運用する際の注意点は
 [tips/mcp-server-entra-id.md](tips/mcp-server-entra-id.md)、この方式特有の
 ハマりどころは[tips/mcp-oauth.md](tips/mcp-oauth.md)を参照。
 
+> **アプリ側でトークンを自前取得するなら、この手順(Foundry Portalでのツール接続)は不要**。
+> `MCPTool.authorization`(または`headers`)にアプリが用意したアクセストークンを直接
+> 渡す方式であれば、手順2(Foundry Portalでのconnection作成)・手順3(redirect URI登録)・
+> 手順4の`project_connection_id`は一切使わない。`oauth_consent_request`も出ない。
+> 詳細は[tips/mcp-oauth.md](tips/mcp-oauth.md)の「`project_connection_id`を使わず、
+> `MCPTool.authorization`にトークンを直接渡す方式もある」、実装例は
+> [scripts/run-mcp-agent-direct-token.py](../scripts/run-mcp-agent-direct-token.py)参照。
+
 ## 前提
 
 - MCPサーバー用のOAuthクライアント登録(呼び方はプロバイダーによって異なる。
