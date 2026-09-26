@@ -123,5 +123,6 @@ terraform destroy
   `existing_resource_id` として渡しています。
 - モデルのデプロイに失敗する場合は `variables.tf` の `model_name` / `model_version` /
   `model_capacity` を利用可能なものに変更してください。
-- 実装中に遭遇したTerraform/Azureのハマりどころ(エラーメッセージと回避策)は
-  [docs/NOTES.md](docs/NOTES.md) にまとめてあります。
+- 実装中に遭遇したハマりどころ(エラーメッセージと回避策)は
+  [docs/NOTES_TERRAFORM.md](docs/NOTES_TERRAFORM.md)(Terraform/AVMモジュール)・
+  [docs/NOTES_AZURE.md](docs/NOTES_AZURE.md)(Azure運用)にまとめてあります。

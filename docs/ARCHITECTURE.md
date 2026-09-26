@@ -63,4 +63,5 @@ MCP サーバー側は、この NAT Gateway の Public IP(`terraform output nat_
 - [Foundry Agent Service のプライベート ネットワークを設定する](https://learn.microsoft.com/ja-jp/azure/foundry/agents/how-to/virtual-networks) —
   VNet injection・サブネット委任・DNSゾーン構成(本リポジトリの6ゾーンと対応)・
   Bastion/VPN/ExpressRouteでのアクセス方法・トラブルシューティングまで一次情報として詳しい
-- [docs/NOTES.md](NOTES.md) — 実装中に遭遇したTerraform/Azureのハマりどころと回避策
+- [docs/NOTES_TERRAFORM.md](NOTES_TERRAFORM.md) — Terraform/AVMモジュールのハマりどころ
+- [docs/NOTES_AZURE.md](NOTES_AZURE.md) — Azure運用のTips
