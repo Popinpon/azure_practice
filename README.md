@@ -22,13 +22,26 @@ NAT Gateway を構築します。
 - 利用するモデル (既定 `gpt-6-luna`, version `2026-09-22`) が対象リージョンで提供されていること
   - `az cognitiveservices model list --location <region>` で確認できます
 
+## ディレクトリ構成
+
+```
+.
+├── README.md
+└── terraform/       # Terraformコード一式(このディレクトリで実行する)
+    ├── *.tf
+    ├── local.auto.tfvars.example
+    └── local.auto.tfvars   # 自分で作成する。gitignore対象
+```
+
 ## 設定 (local.auto.tfvars)
 
 サブスクリプション・リソースグループ・許可IPはコードにハードコードせず、`*.auto.tfvars` ファイルで
-渡します。`*.auto.tfvars` は `terraform plan`/`apply` 実行時に**自動で読み込まれる**ので、
-`source` や `export` は不要です。
+渡します。`*.auto.tfvars` は `terraform plan`/`apply` 実行時に**同じディレクトリ内のものが
+自動で読み込まれる**ので、`source` や `export` は不要です(別ディレクトリに置くと自動読み込みされ
+ないので、`terraform/` 配下に置いてください)。
 
 ```bash
+cd terraform
 cp local.auto.tfvars.example local.auto.tfvars
 ```
 
@@ -49,6 +62,7 @@ CIDR 表記(IPアドレス + プレフィックス長)で指定します。`/32`
 ## デプロイ
 
 ```bash
+cd terraform   # 上の設定済みなら既にこのディレクトリにいるはず
 terraform init
 terraform plan
 terraform apply
