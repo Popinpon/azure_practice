@@ -126,3 +126,5 @@ terraform destroy
 - 実装中に遭遇したハマりどころ(エラーメッセージと回避策)は
   [docs/tips/terraform.md](docs/tips/terraform.md)(Terraform/AVMモジュール)・
   [docs/tips/azure.md](docs/tips/azure.md)(Azure運用)にまとめてあります。
+- Agentから実際にMCPサーバーへOAuth接続する際のハマりどころは
+  [docs/tips/mcp-oauth.md](docs/tips/mcp-oauth.md) を参照してください。

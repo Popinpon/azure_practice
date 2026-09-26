@@ -64,3 +64,4 @@ MCP サーバー側は、この NAT Gateway の Public IP(`terraform output nat_
   Bastion/VPN/ExpressRouteでのアクセス方法・トラブルシューティングまで一次情報として詳しい
 - [docs/tips/terraform.md](tips/terraform.md) — Terraform/AVMモジュールのハマりどころ
 - [docs/tips/azure.md](tips/azure.md) — Azure運用のTips
+- [docs/tips/mcp-oauth.md](tips/mcp-oauth.md) — AgentからMCPサーバーへのOAuth接続のハマりどころ
