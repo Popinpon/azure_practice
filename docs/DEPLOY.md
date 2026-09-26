@@ -81,12 +81,33 @@ Standard Agent Setup(AI Foundryアカウント本体)の作成には時間がか
 
 ## 動作確認 (送信元IP固定のテスト)
 
-1. `terraform output nat_gateway_public_ip` で固定IPを確認し、検証用MCPサーバー側の許可リストに登録
-2. `terraform output ai_foundry_endpoint` のエンドポイントに対し、`allowed_source_cidr` の端末から
-   Foundry Agent SDK / REST API でMCPツールを設定したAgentを作成・実行
-3. MCPサーバー側のアクセスログを確認し、送信元IPが `nat_gateway_public_ip` と一致することを確認
+1. `terraform output nat_gateway_public_ip` で固定IPを確認
+2. 検証用MCPサーバー(Container Appsの場合)側でIP制限(access restriction)を設定し、
+   `nat_gateway_public_ip` のみ許可する。
+   ```bash
+   az containerapp ingress access-restriction set \
+     --name <MCPサーバーのContainer App名> \
+     --resource-group <リソースグループ> \
+     --rule-name AllowNatGateway \
+     --ip-address <nat_gateway_public_ip>/32 \
+     --action Allow
+   ```
+3. `terraform output ai_foundry_endpoint` のエンドポイントに対し、`allowed_source_cidr` の端末から
+   Foundry Agent SDK / REST API でMCPツールを設定したAgentを作成・実行し、ツール呼び出しが
+   成功することを確認する
 
-`allowed_source_cidr` 以外のIPから同じエンドポイントを叩くと拒否されることも合わせて確認してください。
+IP制限を外した状態(または許可リストに無関係のIPしか入れていない状態)で同じツール呼び出しを
+試すと拒否されることも合わせて確認してください。拒否された場合、Foundry Agent Service側は
+以下のような`424 Failed Dependency`(内側に`innerStatusCode: 403`)を返す。これはFoundry側の
+障害ではなく、MCPサーバー(customer-managed downstream)側が403で拒否したことを示す正常な
+エラーで、送信元IP制限が効いている証拠になる。
+
+```
+[Failed Dependency] ... failed with status code 424 ...
+{"error":"CustomerManagedDownstreamError", "message":"... the customer-managed downstream
+service responded with 403 ...", "innerStatusCode":403, "innerReasonPhrase":"Forbidden"}
+```
+
 AgentのMCPツールをOAuth認可コード方式で接続する場合のハマりどころは
 [docs/tips/mcp-oauth.md](tips/mcp-oauth.md) を参照してください。
 
