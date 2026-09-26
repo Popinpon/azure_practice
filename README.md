@@ -109,6 +109,12 @@ terraform destroy
 
 ## 補足・既知の制限
 
+- **MS公式のガイドとの違い**: [公式ドキュメント](https://learn.microsoft.com/ja-jp/azure/foundry/agents/how-to/virtual-networks)は
+  VNet内部からのアクセス手段としてAzure Bastion(踏み台VM) / VPN Gateway / ExpressRouteを
+  前提にしている。本リポジトリはコストと手間を優先し、踏み台VMを置かずAI Foundryの
+  パブリックエンドポイントを`admin_source_cidr`のIP制限のみで直接開放している(詳細は
+  [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) の①)。厳密な閉域性が必要な本番用途では
+  公式ガイドの通りBastion等を使う構成に変更してください。
 - なぜCosmos DB / AI Search / Storage Accountが必須なのかは
   [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) を参照。
 - Cosmos DB は AVM モジュール経由だと Serverless 化ができないため、`cosmosdb.tf` で自前作成し
