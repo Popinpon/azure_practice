@@ -12,3 +12,4 @@ notes/*
 __pycache__/
 *.pyc
 .venv/
+*.test.txt

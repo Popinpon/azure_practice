@@ -43,4 +43,5 @@ Agentの送信元IPをNAT Gatewayで固定し、受信・内部通信・送信�
 - [docs/tips/terraform.md](docs/tips/terraform.md) — Terraform/AVMモジュールのハマりどころ
 - [docs/tips/azure.md](docs/tips/azure.md) — Azure運用のTips
 - [docs/tips/mcp-oauth.md](docs/tips/mcp-oauth.md) — AgentからMCPサーバーへのOAuth接続のハマりどころ
+- [docs/tips/foundry-auth.md](docs/tips/foundry-auth.md) — Foundry Agent Service自体の認証(Entra ID/APIキー)のTips
 - [docs/tips/container-apps.md](docs/tips/container-apps.md) — Azure Container Apps運用のTips(送信元IPの確認方法など)
