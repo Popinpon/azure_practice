@@ -56,13 +56,14 @@ variable "mcp_server_url" {
 
 variable "model_name" {
   type        = string
-  default     = "gpt-6-luna"
-  description = "AI Foundryアカウントにデプロイする検証用モデル。"
+  default     = "gpt-5.6-luna"
+  description = "AI Foundryアカウントにデプロイする検証用モデル。gpt-6-lunaはAgent ServiceのMCPツール呼び出しで500エラーになる既知の問題があるため、gpt-5.6-lunaを既定にしている(詳細: docs/tips/mcp-oauth.md)。"
 }
 
 variable "model_version" {
-  type    = string
-  default = "2026-09-22"
+  type        = string
+  default     = "latest"
+  description = "モデルのバージョン。\"latest\"を指定すると、デプロイ時点の最新版が使われる(AVMモジュールの公式サンプルでも採用されている値)。"
 }
 
 variable "model_capacity" {

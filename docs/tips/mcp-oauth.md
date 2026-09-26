@@ -70,8 +70,87 @@ curl -s https://<mcpサーバーのホスト名>/.well-known/oauth-protected-res
 ```
 
 - `authorization_servers` → テナントIDが分かるので `.../oauth2/v2.0/authorize` /
-  `.../oauth2/v2.0/token` をAuth URL / Token URL(= Refresh URLもこれでよい)に
+  `.../oauth2/v2.0/token` をAuth URL / Token URLに(**Refresh URLは空欄のままにする**。
+  理由は次項)
 - `scopes_supported` → そのままFoundryのScopes欄に(`offline_access`は別途追記)
+
+### Refresh URLを埋めると500エラーになる既知の不具合がある — 空欄のままにする
+
+FoundryのCustom OAuth設定で、Refresh URL欄にToken URLと同じ値を入れて保存すると、
+接続の作成/利用時に以下のような`500 Internal Server Error`(`server_error`)になる
+ことがある。
+
+```json
+{"error":{"message":"The server had an error processing your request. Sorry about that! ...",
+"type":"server_error","code":"server_error","request_id":"..."}}
+```
+
+同じ症状がMicrosoft Q&Aでも報告されている
+([Azure AI Foundry custom MCP tool with OAuth Identity Passthrough returns
+redirectUrl: null and fails when Refresh URL is set](https://learn.microsoft.com/en-us/answers/questions/5806486/azure-ai-foundry-custom-mcp-tool-with-oauth-identi))。
+Custom OAuth設定のpreview機能側のバグと見られ、リージョン固有の場合もあるようだが、
+japaneastでも再現した。
+
+**対処**: Refresh URLは空欄のままにする。ただしその場合、保存時に発行される
+redirect URLが`redirectUrl: null`になることがある。その場合は、以下の形式で
+リダイレクトURIを手動で組み立て、Entra側アプリ登録のWebプラットフォームに追加する。
+
+```
+https://cas.services.azure-ai.net/app/oauth/redirect?connectionId=<接続名>
+```
+
+(`<接続名>`はFoundry Portalで付けたconnectionの名前)
+
+一度おかしくなった接続(Refresh URLを埋めて保存してしまった等)は、編集で直せない
+ことがある。その場合は接続自体を削除して作り直す方が早い。
+
+### `gpt-6-luna`はAgent ServiceのMCPツール呼び出しで500になる — `gpt-5.6-luna`なら動く
+
+Client ID・Refresh URL・接続の作り直しなど設定周りを全部直しても、Responses APIに
+MCPツール付きAgentで呼び出すと`500 server_error`になり続けることがある。この場合、
+**モデル自体(`model_name`。既定は`gpt-6-luna`)が原因**の可能性がある。
+
+```json
+{"error":{"message":"The server had an error processing your request. Sorry about that! You can retry your request, or contact us through an Azure support request at: https://go.microsoft.com/fwlink/?linkid=2213926 if you keep seeing this error. (Please include the request ID ... in your email.)","type":"server_error","param":null,"code":"server_error","request_id":"..."}}
+```
+
+新規のconnection・新規のAgentの組み合わせで試しても、request IDだけ変わって同じ
+エラーが再現し続けるのが特徴(接続やAgentの状態が壊れているのではなく、モデルが
+原因であることを示唆する)。
+
+切り分け方: ツールを一切付けていないAgentへの素のチャット([mcp-foundry-setup.md](../mcp-foundry-setup.md)
+手順4の`create_version`でtools無しにする、またはFoundry Portalで直接作る)が成功するなら、
+Project/Accountやconnectionの設定自体は壊れていない。その状態でMCPツール付きだけが
+500になるなら、モデルを疑う。
+
+実際に`gpt-6-luna`→`gpt-5.6-luna`へ変更したところ、同じツール・接続設定のまま解消した。
+`gpt-6-luna`がAgent ServiceのMCPツール呼び出し(preview機能)に対応していない可能性がある。
+`terraform/variables.tf`の`model_name`の既定値は本記事時点では`gpt-6-luna`のままなので、
+MCPツールを使う検証では`gpt-5.6-luna`などに変更したデプロイを試すこと。
+
+### `azd ai connection create`はテナント跨ぎ環境で誤ったテナントのトークンを使う既知バグがある
+
+Foundry Portalをポチポチする代わりに`azd ai connection create`(実体は
+`azure.ai.connections`というBeta拡張)で接続をスクリプト的に作ろうとすると、
+複数テナントに所属している環境で以下のようなエラーになることがある。
+
+```
+ERROR CODE: Tenant provided in token does not match resource token
+{"error":{"code":"Tenant provided in token does not match resource token",
+"message":"Token tenant <A> does not match resource tenant."}}
+```
+
+`azd auth login --tenant-id <正しいテナント>`で明示的にログインし直しても再現する。
+GitHubのazure-devリポジトリに同種の既知Issueがある
+([#5974](https://github.com/Azure/azure-dev/issues/5974)、
+[#9712](https://github.com/Azure/azure-dev/issues/9712))。`AzureDeveloperCliCredential`
+を内部で呼ぶ際にtenant-idを明示的に渡していないバグで、ログイン中アカウントの
+**ホームテナント**のトークンを使ってしまい、対象サブスクリプションのテナントと
+食い違う。ゲスト/クロステナント構成(今回のように複数テナントに所属している状況)
+で起きやすい。
+
+ユーザー側の確実なワークアラウンドは見つかっていない。この状況になったら
+Foundry Portalでの手動作成に切り替えるのが早い。
 
 ### Custom OAuthのredirect URLは「設定後」に発行される — 先に決め打ちできない
 

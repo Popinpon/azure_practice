@@ -31,6 +31,12 @@ client(シークレットあり)とpublic client(シークレット無し・PKCE
 
 - 有効期限は運用方針に合わせて選択
 - 発行直後にしか値(Value)を確認できないので、その場でコピーして安全な場所に保存する
+- **「シークレット ID」と「値(Value)」を混同しない**。シークレットIDはそのシークレット
+  というレコードを識別するだけのGUIDで、OAuthの認証には使えない。Foundry Portal側の
+  `Client secret`欄([../mcp-foundry-setup.md](../mcp-foundry-setup.md)手順1・2)に
+  入れるのは必ず値(Value)の方。シークレットIDを入れてしまうと、consent自体は通っても
+  トークン交換の段階で無効なclient_secretとして弾かれる(値を控え忘れた場合は、
+  シークレットを発行し直すしかない)
 
 このシークレットの有無が、後でFoundry側にリダイレクトURIを登録する際の
 プラットフォーム種別(Web / public client用)の判断基準にもなる。

@@ -2,9 +2,17 @@
 """docs/mcp-foundry-setup.md の手順4(Agentにツールを追加する)と手順5(実行して
 認可する)を実行する。
 
+Foundry Agent ServiceはAIProjectClient経由(project-scoped endpoint)で呼ぶ必要が
+あり、Responses APIへの`tools`はAgent定義(PromptAgentDefinition)に持たせた上で
+`agent_reference`で参照する形になる(公式サンプル:
+https://learn.microsoft.com/azure/foundry/agents/how-to/tools/model-context-protocol )。
+
 前提: 手順1〜3(OAuthクライアント登録・Foundry Portalでのカスタム OAuth 接続作成・
-OAuthプロバイダー側へのredirect URL登録)が完了していること。MCP_CONNECTION_ID には
-手順2で作成したconnectionの project_connection_id を指定する。
+OAuthプロバイダー側へのredirect URL登録)が完了していること。MCP_CONNECTION_ID には、
+Foundry Portalの対象ツール詳細画面(Build → 接続したツールを開く)の
+「プロジェクト接続 ID」欄に表示されている値を指定する(公式サンプルでは短い
+connection名だが、Portal上はARMリソースIDのフルパスを表示するため、うまく行かない
+場合はどちらの形式も試すこと)。
 
 設定は scripts/.env から読む。scripts/.env.example を参考に作成すること。
 個別に上書きしたい値だけ、対応する --オプションで指定すればよい。
@@ -26,21 +34,21 @@ import argparse
 import os
 import sys
 
-from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+import openai
+from azure.ai.projects import AIProjectClient
+from azure.ai.projects.models import MCPTool, PromptAgentDefinition
+from azure.identity import DefaultAzureCredential
 from dotenv import load_dotenv
-from openai import AzureOpenAI
 
 load_dotenv()
 
 
-def build_client(endpoint: str, api_version: str) -> AzureOpenAI:
-    token_provider = get_bearer_token_provider(
-        DefaultAzureCredential(), "https://ai.azure.com/.default"
-    )
-    return AzureOpenAI(
-        azure_endpoint=endpoint,
-        api_version=api_version,
-        azure_ad_token_provider=token_provider,
+def build_project_client(endpoint: str, project: str) -> AIProjectClient:
+    project_endpoint = endpoint.rstrip("/") + "/api/projects/" + project
+    return AIProjectClient(
+        endpoint=project_endpoint,
+        credential=DefaultAzureCredential(),
+        allow_preview=True,
     )
 
 
@@ -54,12 +62,20 @@ def parse_args() -> argparse.Namespace:
         help="AI Foundryアカウントのエンドポイント。未指定なら.envのFOUNDRY_ENDPOINTを使う",
     )
     parser.add_argument(
-        "--api-version", default=os.environ.get("FOUNDRY_API_VERSION", "2026-08-01-preview")
+        "--project",
+        default=os.environ.get("FOUNDRY_PROJECT", "closed-project"),
+        help="Foundryプロジェクト名。未指定なら.envのFOUNDRY_PROJECT"
+        "(既定 closed-project。terraformのbase_name-projectと同じ)を使う",
     )
     parser.add_argument(
         "--model",
         default=os.environ.get("FOUNDRY_MODEL", "gpt-6-luna"),
         help="デプロイ済みモデル名。未指定なら.envのFOUNDRY_MODEL(既定 gpt-6-luna)を使う",
+    )
+    parser.add_argument(
+        "--agent-name",
+        default=os.environ.get("FOUNDRY_AGENT_NAME", "mcp-verify-agent"),
+        help="作成/更新するAgent名。未指定なら.envのFOUNDRY_AGENT_NAMEを使う",
     )
     parser.add_argument(
         "--server-label",
@@ -74,7 +90,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--connection-id",
         default=os.environ.get("MCP_CONNECTION_ID", ""),
-        help="Foundry Portalで作成したCustom OAuth接続のproject_connection_id。"
+        help="Foundry Portalの「プロジェクト接続 ID」欄の値。"
         "未指定なら.envのMCP_CONNECTION_IDを使う",
     )
     parser.add_argument(
@@ -116,23 +132,44 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    client = build_client(args.endpoint, args.api_version)
+    project = build_project_client(args.endpoint, args.project)
+    openai_client = project.get_openai_client()
 
-    tools = [
-        {
-            "type": "mcp",
-            "server_label": args.server_label,
-            "server_url": args.server_url,
-            "project_connection_id": args.connection_id,
-            "require_approval": args.require_approval,
-        }
-    ]
+    tool = MCPTool(
+        server_label=args.server_label,
+        server_url=args.server_url,
+        require_approval=args.require_approval,
+        project_connection_id=args.connection_id,
+    )
 
-    create_kwargs = {"model": args.model, "input": args.input, "tools": tools}
+    try:
+        agent = project.agents.create_version(
+            agent_name=args.agent_name,
+            definition=PromptAgentDefinition(
+                model=args.model,
+                instructions="MCPサーバーのツールを必要に応じて使ってください。",
+                tools=[tool],
+            ),
+        )
+    except openai.APIStatusError as err:
+        print(f"リクエストURL: {err.response.request.url}", file=sys.stderr)
+        print(f"レスポンス: {err.response.text}", file=sys.stderr)
+        raise
+    print(f"agent: {agent.name} (version {agent.version})")
+
+    create_kwargs = {
+        "input": args.input,
+        "extra_body": {"agent_reference": {"name": agent.name, "type": "agent_reference"}},
+    }
     if args.previous_response_id:
         create_kwargs["previous_response_id"] = args.previous_response_id
 
-    response = client.responses.create(**create_kwargs)
+    try:
+        response = openai_client.responses.create(**create_kwargs)
+    except openai.APIStatusError as err:
+        print(f"リクエストURL: {err.response.request.url}", file=sys.stderr)
+        print(f"レスポンス: {err.response.text}", file=sys.stderr)
+        raise
 
     consent_requests = [
         item for item in response.output if item.type == "oauth_consent_request"
@@ -140,7 +177,10 @@ def main() -> int:
     if consent_requests:
         print(f"response id: {response.id}")
         for item in consent_requests:
-            print(f"認可してください: {item.consent_link}")
+            # OSC 8ハイパーリンク。VSCode等の対応ターミナルではクリック可能なリンクになる
+            # (未対応ターミナルでもURL文字列自体は表示される)
+            link = f"\033]8;;{item.consent_link}\033\\{item.consent_link}\033]8;;\033\\"
+            print(f"認可してください: {link}")
         print(
             "\n同意後、このresponse idを--previous-response-idに指定して再実行してください:",
             file=sys.stderr,

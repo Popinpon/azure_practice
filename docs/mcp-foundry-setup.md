@@ -57,7 +57,8 @@ Foundryには上記に加えて、Client ID / Client secretを入力する。
 
 | Foundry側の項目 | 値 |
 |---|---|
-| server_url / Auth URL / Token URL / Refresh URL / Scopes | 上記スクリプトの出力(Entra IDの場合、Auth/Token URLの規則は安定しているのでスクリプトを省いて`https://login.microsoftonline.com/<tenant-id>/v2.0/{authorize,token}`と決め打ちしてもよい) |
+| server_url / Auth URL / Token URL / Scopes | 上記スクリプトの出力(Entra IDの場合、Auth/Token URLの規則は安定しているのでスクリプトを省いて`https://login.microsoftonline.com/<tenant-id>/v2.0/{authorize,token}`と決め打ちしてもよい) |
+| Refresh URL | **空欄のままにする**(既知の不具合を回避するため。詳細は[tips/mcp-oauth.md](tips/mcp-oauth.md)参照) |
 | Client ID | OAuthプロバイダー側のクライアント登録の値 |
 | Client secret | OAuthプロバイダー側のクライアント登録の値。MCPサーバー側がconfidential clientを要求する場合のみ必須(public client・PKCEのみの場合は不要。Entra IDでの登録は[tips/mcp-server-entra-id.md](tips/mcp-server-entra-id.md)参照) |
 
@@ -67,10 +68,13 @@ Foundryには上記に加えて、Client ID / Client secretを入力する。
 
 1. `server_url` / `server_label`(任意の識別名)を入力
 2. 認証方式に **OAuth Identity Passthrough** → **Custom OAuth** を選択
-3. 手順1で組み立てた値(Client ID / Client secret / Auth URL / Token URL / Refresh URL
-   / Scopes)を入力して保存
+3. 手順1で組み立てた値(Client ID / Client secret / Auth URL / Token URL / Scopes)を
+   入力して保存。**Refresh URLは空欄のままにする**(埋めると保存/利用時に500エラーに
+   なる既知の不具合がある。詳細は[tips/mcp-oauth.md](tips/mcp-oauth.md)参照)
 
-保存すると **redirect URL** が発行される。これをコピーしておく。
+保存すると **redirect URL** が発行される。これをコピーしておく(Refresh URLを空欄に
+した場合、`redirectUrl: null`になることがある。その場合の対処も
+[tips/mcp-oauth.md](tips/mcp-oauth.md)参照)。
 
 ## 3. OAuthプロバイダー側にリダイレクトURIを登録する
 
@@ -88,28 +92,53 @@ OAuthプロバイダーのクライアント登録の管理画面で、手順2�
 
 ## 4. Agentにツールを追加する
 
-Agent作成/更新時に `mcp` ツールとして、`server_url` / `server_label` /
-手順2で作成したconnectionの `project_connection_id` / `require_approval` を指定する。
+Foundry Agent Serviceは`AIProjectClient`経由(project-scoped endpoint、
+`https://<account>.services.ai.azure.com/api/projects/<project>`)で呼ぶ。
+`mcp`ツールはResponses APIの`tools`に直接渡すのではなく、`PromptAgentDefinition`に
+持たせてAgentとして作成し、実行時に`agent_reference`で参照する。
+`project_connection_id`は、Foundry Portalの対象ツール詳細画面(**Build** →
+接続したツールを開く)の「プロジェクト接続 ID」欄に表示されている値を使う
+(公式サンプルでは`<connection名>`のような短い名前だが、Portal上はARMリソースIDの
+フルパス`/subscriptions/.../connections/<connection名>`を表示するため、動かない場合は
+両方試す)。実際のコードは[scripts/run-mcp-agent.py](../scripts/run-mcp-agent.py)を参照
+(`AIProjectClient` → `get_openai_client()` → `MCPTool` / `PromptAgentDefinition` →
+`agents.create_version()`という流れ)。
 
-```python
-tools = [{
-    "type": "mcp",
-    "server_label": "<server_label>",
-    "server_url": "<server_url>",
-    "project_connection_id": "<connection名>",
-    "require_approval": "never",  # 検証用途。本番では"always"や個別ツール指定を検討
-}]
+### Agentの作成・更新には`Foundry User`ロールが必要
+
+`create_version`は`Microsoft.CognitiveServices/accounts/AIServices/agents/write`を要求する。
+`az login`しているだけでは足りず、Foundryリソースのスコープに自分の(または呼び出し元の)
+principalへ**Foundry User**ロール(旧称 Azure AI User)の割り当てが要る。
+
 ```
+azure.core.exceptions.HttpResponseError: (UserError) Identity(object id: ...) does not have
+permissions for Microsoft.CognitiveServices/accounts/AIServices/agents/write actions.
+```
+
+割り当て先ごとに、やり方は主に2通り。
+
+1. **自分自身に割り当てる場合(Foundry Portalのボタン)**: 対象プロジェクトでAgentの作成画面を
+   開くと、権限不足時に「Foundry ユーザー ロールを割り当てる」ボタンが出る場合がある。
+   それを押すだけでよい(反映まで数分かかることがある)。**自分自身にしか使えない。**
+2. **マネージドID/サービスプリンシパルに割り当てる場合(Azure PortalのIAM画面)**: 対象
+   リソースの**アクセス制御(IAM)** → **ロールの割り当ての追加**で、割り当て先に対象の
+   マネージドID(または作成済みのアプリ登録)を選ぶ。マネージドIDはシークレットの発行が
+   要らない分、軽く試すには気軽(サービスプリンシパル側はアプリ登録作成 + クライアント
+   シークレット/証明書の発行が別途必要)。
+
+なお、**Agents serviceはAPIキー認証に非対応**(Entra ID必須)。「RBACの手間を省きたいから
+キー認証にする」という回避はできない
+([Authentication and authorization in Microsoft Foundry](https://learn.microsoft.com/azure/foundry/concepts/authentication-authorization-foundry)
+のFeature support matrix参照)。
+
+本番でWebアプリ等から呼ぶ場合は、Agentの作成・更新は事前(デプロイ時やCI/CD)に済ませておき、
+実行時に`agent_reference`で参照するだけにするのが基本。その用途ならAgent作成権限は不要で、
+呼び出し元(マネージドID/サービスプリンシパル)には最小権限の**Foundry Agent Consumer**
+ロールだけを割り当てればよい。
 
 ## 5. 実行して認可する
 
 Agentを実行すると、初回はレスポンスに `oauth_consent_request` が含まれる。
-
-```python
-for item in response.output:
-    if item.type == "oauth_consent_request":
-        print(f"認可してください: {item.consent_link}")
-```
 
 `consent_link` をブラウザで開いてサインイン・同意する(この操作はFoundryのAgent
 runtimeを経由しないので、consent時のアクセス元IPはAgent runtime側の固定IPとは
