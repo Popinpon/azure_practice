@@ -1,0 +1,8 @@
+# cp local.auto.tfvars.example local.auto.tfvars をしてから値を埋めてください。
+# *.auto.tfvars は terraform plan/apply 時に自動で読み込まれます(source/export 不要)。
+# local.auto.tfvars 自体は .gitignore 済みでコミットされません。
+
+# subscription_id を指定しなければ az account show の現在のサブスクリプションが使われる
+# subscription_id     = "00000000-0000-0000-0000-000000000000"
+resource_group_name = "rg-hogehoge"
+admin_source_cidr   = "203.0.113.5/32" # `curl -s https://ifconfig.me` で確認した自分のグローバルIPに /32 を付けたもの
