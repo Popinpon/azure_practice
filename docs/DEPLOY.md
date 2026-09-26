@@ -51,29 +51,20 @@
 
 ## 設定 (local.auto.tfvars)
 
-サブスクリプション・リソースグループ・許可IPはコードにハードコードせず、`*.auto.tfvars` ファイルで
-渡します。`*.auto.tfvars` は `terraform plan`/`apply` 実行時に**同じディレクトリ内のものが
-自動で読み込まれる**ので、`source` や `export` は不要です(別ディレクトリに置くと自動読み込みされ
-ないので、`terraform/` 配下に置いてください)。
-
 ```bash
 cd terraform
 cp local.auto.tfvars.example local.auto.tfvars
 ```
 
-`local.auto.tfvars` を編集(`local.auto.tfvars` は `.gitignore` 済みでコミットされません):
+`local.auto.tfvars` を編集(gitignore対象、コミットされません):
 
 ```hcl
-# subscription_id を指定しなければ az account show の現在のサブスクリプションが使われる
-# subscription_id     = "00000000-0000-0000-0000-000000000000"
+# subscription_id     = "00000000-0000-0000-0000-000000000000"  # 未指定ならaz cliの現在のサブスクリプション
 resource_group_name = "rg-hogehoge"
-admin_source_cidr   = "203.0.113.5/32"   # 自分のグローバルIP。curl -s https://ifconfig.me で確認
+admin_source_cidr   = "203.0.113.5/32"   # 自分のグローバルIP(curl -s https://ifconfig.me)に/32を付けたもの
 ```
 
-`admin_source_cidr` は「AI Foundryのパブリックエンドポイントへの直接アクセスを許可する送信元」を
-CIDR 表記(IPアドレス + プレフィックス長)で指定します。`/32` は「そのIP1つだけ許可」という意味です。
-自宅回線・モバイル回線などでIPが変わると呼べなくなるので、その場合は現在のIPを確認し直して
-`local.auto.tfvars` を更新 → `terraform apply` してください。
+IPが変わってアクセスできなくなった場合は、`admin_source_cidr` を更新して再度 `terraform apply` してください。
 
 ## デプロイ
 
