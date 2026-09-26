@@ -13,11 +13,13 @@ AI Foundry のパブリックエンドポイントは有効にしたまま、`ne
 `admin_source_cidr` 以外からの接続を拒否している。動作確認用の踏み台VMを用意しなくても、
 手元の端末から直接 Agent API / Foundry Portal を呼べる。
 
-### ② Agent runtime ↔ BYOR(Private Link・VNet内部)
+### ② Agent runtime ↔ 自前で用意して使わせるリソース(Private Link・VNet内部)
 
 Agent の会話履歴・スレッド・エージェント定義(Cosmos DB)、ベクトルストア(AI Search)、
-アップロードファイル(Storage Account)は Standard Agent Setup の必須リソース(BYOR)。
-これらはパブリックアクセスを一切許可しておらず、Private Endpoint 経由でのみ到達できる。
+アップロードファイル(Storage Account)は、Microsoft管理ではなく**自分のサブスクリプションに
+自前で用意して使わせる**必要がある(業界では BYOR = Bring Your Own リソース と呼ばれる)。
+Standard Agent Setup の必須リソースで、これらはパブリックアクセスを一切許可しておらず、
+Private Endpoint 経由でのみ到達できる。
 `snet-agent` からは同一 VNet 内の `snet-private-endpoints` に直接ルーティングされる。
 
 これらは MCP を呼ぶかどうかに関わらず、Standard Agent Setup(= VNet injection)を使う以上

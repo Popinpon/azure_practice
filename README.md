@@ -12,7 +12,8 @@ NAT Gateway を構築します。
     Private Endpoint も併設(Agentランタイム自身のアクセス用)
   - 送信: Agentランタイムを `snet-agent`(VNet injection)に配置し、既定の送信経路を無効化。
     NAT Gateway 経由に強制することで、MCPサーバーへの送信元IPを固定
-- Standard Agent Setup の必須BYORリソース: Cosmos DB(自前作成・Serverless) / AI Search(Basic) / Storage Account
+- Standard Agent Setup の必須リソース(自前で用意して使わせるリソース。BYOR = Bring Your Own リソース):
+  Cosmos DB(自前作成・Serverless) / AI Search(Basic) / Storage Account
 - 動作確認用の踏み台VMは不要(パブリックアクセスをIP制限しているため、自分の端末から直接呼べる)
 
 ## アーキテクチャ

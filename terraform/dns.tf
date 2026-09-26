@@ -5,7 +5,7 @@ locals {
     "privatelink.services.ai.azure.com",
     "privatelink.openai.azure.com",
     "privatelink.cognitiveservices.azure.com",
-    # Standard Agent SetupのBYOR依存リソース用に必要。
+    # Standard Agent Setupで自前で用意して使わせる依存リソース用に必要。
     "privatelink.documents.azure.com",   # Cosmos DB
     "privatelink.search.windows.net",    # Azure AI Search
     "privatelink.blob.core.windows.net", # Storage Account

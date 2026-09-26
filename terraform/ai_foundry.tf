@@ -39,10 +39,12 @@ module "ai_foundry" {
     ]
     # パブリックエンドポイントは有効だがadmin_source_cidrに固定。
     # 踏み台なしで直接呼べる一方、それ以外からは拒否する。
+    # Cognitive Servicesのnetwork_acls.ip_rulesは/31・/32のCIDRを受け付けない
+    # ため、admin_source_cidrがCIDR表記でもIP部分だけを渡す。
     public_network_access_enabled = true
     network_acls = {
       default_action = "Deny"
-      ip_rules       = [var.admin_source_cidr]
+      ip_rules       = [split("/", var.admin_source_cidr)[0]]
     }
   }
 
@@ -84,7 +86,7 @@ module "ai_foundry" {
     }
   }
 
-  # モジュールに作らせず、自前のCosmos DB(cosmosdb.tf)を持ち込む(BYOR)。
+  # モジュールに作らせず、自前で用意したCosmos DB(cosmosdb.tf)を使わせる。
   # Serverlessモード(リクエスト従量課金、プロビジョンドスループットの
   # 下限なし)にするため。Private Endpointも、モジュールが既存リソース
   # に対してはこのステップをスキップするのでcosmosdb.tf側で作成している。
