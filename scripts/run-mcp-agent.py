@@ -69,8 +69,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--model",
-        default=os.environ.get("FOUNDRY_MODEL", "gpt-6-luna"),
-        help="デプロイ済みモデル名。未指定なら.envのFOUNDRY_MODEL(既定 gpt-6-luna)を使う",
+        default=os.environ.get("FOUNDRY_MODEL", "gpt-5.6-luna"),
+        help="デプロイ済みモデル名。未指定なら.envのFOUNDRY_MODEL(既定 gpt-5.6-luna)を使う",
     )
     parser.add_argument(
         "--agent-name",

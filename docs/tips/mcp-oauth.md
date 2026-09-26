@@ -125,8 +125,7 @@ Project/Accountやconnectionの設定自体は壊れていない。その状態�
 
 実際に`gpt-6-luna`→`gpt-5.6-luna`へ変更したところ、同じツール・接続設定のまま解消した。
 `gpt-6-luna`がAgent ServiceのMCPツール呼び出し(preview機能)に対応していない可能性がある。
-`terraform/variables.tf`の`model_name`の既定値は本記事時点では`gpt-6-luna`のままなので、
-MCPツールを使う検証では`gpt-5.6-luna`などに変更したデプロイを試すこと。
+この調査を受けて`terraform/variables.tf`の`model_name`の既定値は`gpt-5.6-luna`に変更済み。
 
 ### `azd ai connection create`はテナント跨ぎ環境で誤ったテナントのトークンを使う既知バグがある
 

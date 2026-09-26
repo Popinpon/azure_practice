@@ -7,7 +7,7 @@ NAT Gateway を構築します。
 ## 構成
 
 - 公式 AVM パターンモジュール `Azure/avm-ptn-aiml-ai-foundry/azurerm` を使用
-- AI Foundry アカウント (kind=AIServices) + Project + モデルデプロイ (既定: `gpt-6-luna`)
+- AI Foundry アカウント (kind=AIServices) + Project + モデルデプロイ (既定: `gpt-5.6-luna`)
   - 受信: パブリックエンドポイント有効・`allowed_source_cidr` からのみ許可(network ACLs)。
     Private Endpoint も併設(Agentランタイム自身のアクセス用)
   - 送信: Agentランタイムを `snet-agent`(VNet injection)に配置し、既定の送信経路を無効化。
