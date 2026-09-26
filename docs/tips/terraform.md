@@ -65,6 +65,15 @@ resource "azurerm_cosmosdb_account" "this" {
 一致する。「まだ存在しないリソースをTerraformの同一applyで作って、別のモジュールに
 "既存リソース"として渡したい」という場面全般で使えるパターン。
 
+**注意点**: このハッシュの種は `resource_group_name` と `base_name` の2つだけ。
+Cosmos DBアカウント名はAzure全体でグローバルに一意である必要があるため、
+**別のサブスクリプション/テナントの人が偶然この2つとも同じ値**(`base_name` は
+既定値の `closed` のまま使う人が多いと想定されるので、実質は `resource_group_name`
+が他の誰かと一致するかどうかにほぼ懸かる)を使うと名前が衝突する。`subscription_id`
+(Azure全体でグローバルに一意)もハッシュに混ぜれば解消できるが、既存デプロイに
+対して行うとProjectの再作成が必要になる(次項参照)ため、このリポジトリでは
+新規デプロイ時のみの改善点として見送っている。
+
 ### BYORの接続設定は `xxx_definition` と `ai_projects.xxx_connection` の両方を合わせる必要がある
 
 `cosmosdb_definition.this.existing_resource_id` を設定しても、`ai_projects` 側の
