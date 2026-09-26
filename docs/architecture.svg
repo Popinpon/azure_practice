@@ -1,0 +1,119 @@
+<svg viewBox="0 0 1160 740" xmlns="http://www.w3.org/2000/svg" role="img"
+     aria-label="あなたのPCはIP許可リストでAI Foundryのパブリックエンドポイントに到達する。Agent runtimeはsnet-agentからPrivate LinkでAI FoundryとBYOR(Cosmos DB/AI Search/Storage)に到達し、外部のMCPサーバーへはNAT Gateway経由でのみ到達して送信元IPが固定される。">
+  <style>
+    text { font-family: "IBM Plex Sans", "Segoe UI", sans-serif; fill: #16212C; }
+    .mono { font-family: "IBM Plex Mono", "Consolas", monospace; }
+    .title { font-weight: 650; font-size: 13.5px; }
+    .sub   { font-size: 11px; fill: #5B6B7A; }
+    .mono-sub  { font-family: "IBM Plex Mono", "Consolas", monospace; font-size: 10.5px; fill: #5B6B7A; }
+    .region { font-family: "IBM Plex Mono", "Consolas", monospace; font-size: 11px; fill: #5B6B7A; }
+    .flow  { font-family: "IBM Plex Mono", "Consolas", monospace; font-size: 11px; }
+
+    .box-rg     { fill: #FBFCFD; stroke: #8A97A3; stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .box-vnet   { fill: #EAF3FB; stroke: #0A66A6; stroke-width: 1.5; stroke-dasharray: 6 4; }
+    .box-subnet { fill: #FFFFFF; stroke: #4F7DA8; stroke-width: 1.25; }
+    .box-ai     { fill: #FCE9F3; stroke: #B0007E; stroke-width: 1.5; }
+    .box-byor   { fill: #EEF1F5; stroke: #46586B; stroke-width: 1.5; }
+    .box-nat    { fill: #FDECD8; stroke: #B5540A; stroke-width: 1.75; }
+    .box-ext    { fill: #F6F5F1; stroke: #8A8270; stroke-width: 1.25; stroke-dasharray: 3 3; }
+
+    .pe-dot { fill: #FFFFFF; stroke: #4F7DA8; stroke-width: 1.5; }
+
+    .line-admin { stroke: #0A66A6; stroke-width: 1.75; fill: none; }
+    .line-link  { stroke: #5B6B7A; stroke-width: 1.5; fill: none; stroke-dasharray: 4 3; }
+    .line-nat   { stroke: #B5540A; stroke-width: 2.25; fill: none; }
+
+    .arrow-admin { fill: #0A66A6; }
+    .arrow-link  { fill: #5B6B7A; }
+    .arrow-nat   { fill: #B5540A; }
+
+    .ai-ink { fill: #7A0058; }
+    .accent-ink { fill: #8A3F06; }
+  </style>
+
+  <defs>
+    <marker id="arrow-admin" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="arrow-admin" />
+    </marker>
+    <marker id="arrow-link" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="arrow-link" />
+    </marker>
+    <marker id="arrow-nat" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="arrow-nat" />
+    </marker>
+  </defs>
+
+  <rect width="1160" height="740" fill="#F4F7FB" />
+
+  <!-- Resource Group boundary -->
+  <rect x="120" y="40" width="780" height="560" rx="14" class="box-rg" />
+  <text x="140" y="30" class="region">リソースグループ</text>
+
+  <!-- Top row: AI Foundry + BYOR -->
+  <rect x="160" y="90" width="210" height="110" rx="10" class="box-ai" />
+  <text x="265" y="115" text-anchor="middle" class="title ai-ink">AI Foundry アカウント</text>
+  <text x="265" y="134" text-anchor="middle" class="sub">Standard Agent Setup</text>
+  <text x="265" y="150" text-anchor="middle" class="sub">Project + gpt-6-luna</text>
+  <text x="265" y="168" text-anchor="middle" class="mono-sub">public: 許可IPのみ</text>
+
+  <rect x="400" y="90" width="210" height="110" rx="10" class="box-byor" />
+  <text x="505" y="115" text-anchor="middle" class="title">BYOR(必須リソース)</text>
+  <text x="505" y="134" text-anchor="middle" class="sub">Cosmos DB(Serverless)</text>
+  <text x="505" y="150" text-anchor="middle" class="sub">AI Search(Basic)</text>
+  <text x="505" y="166" text-anchor="middle" class="sub">Storage Account</text>
+
+  <!-- VNet boundary -->
+  <rect x="140" y="250" width="720" height="260" rx="12" class="box-vnet" />
+  <text x="160" y="272" class="region">VNet 10.20.0.0/16</text>
+
+  <!-- Subnet: private endpoints -->
+  <rect x="170" y="292" width="380" height="196" rx="8" class="box-subnet" />
+  <text x="185" y="312" class="title" style="font-size:12px">snet-private-endpoints</text>
+  <text x="185" y="326" class="mono-sub">10.20.0.0/24</text>
+
+  <circle cx="265" cy="400" r="7" class="pe-dot" />
+  <text x="265" y="426" text-anchor="middle" class="mono-sub">pe-foundry</text>
+  <line x1="265" y1="292" x2="265" y2="200" class="line-link" />
+
+  <circle cx="455" cy="400" r="7" class="pe-dot" />
+  <text x="455" y="426" text-anchor="middle" class="mono-sub">pe-byor ×3</text>
+  <line x1="455" y1="292" x2="505" y2="200" class="line-link" />
+
+  <!-- Subnet: agent -->
+  <rect x="600" y="292" width="230" height="196" rx="8" class="box-subnet" />
+  <text x="615" y="312" class="title" style="font-size:12px">snet-agent</text>
+  <text x="615" y="326" class="mono-sub">10.20.2.0/27・既定送信経路なし</text>
+
+  <rect x="620" y="345" width="190" height="80" rx="8" class="box-byor" />
+  <text x="715" y="372" text-anchor="middle" class="title" style="font-size:12.5px">Agent runtime</text>
+  <text x="715" y="390" text-anchor="middle" class="sub">VNet injection</text>
+
+  <!-- Private Link connector between subnets -->
+  <line x1="620" y1="393" x2="550" y2="393" class="line-link" marker-end="url(#arrow-link)" />
+  <text x="585" y="384" text-anchor="middle" class="flow" fill="#5B6B7A">Private Link</text>
+
+  <!-- NAT Gateway -->
+  <rect x="620" y="535" width="190" height="66" rx="10" class="box-nat" />
+  <text x="715" y="562" text-anchor="middle" class="title accent-ink">NAT Gateway</text>
+  <text x="715" y="580" text-anchor="middle" class="sub">固定 Public IP</text>
+
+  <line x1="715" y1="425" x2="715" y2="535" class="line-nat" marker-end="url(#arrow-nat)" />
+
+  <!-- Outbound to Internet / MCP server -->
+  <path d="M715,601 C715,650 800,650 850,655" class="line-nat" marker-end="url(#arrow-nat)" />
+  <text x="775" y="628" text-anchor="middle" class="flow accent-ink">送信元IP固定</text>
+
+  <rect x="930" y="618" width="190" height="80" rx="10" class="box-ext" />
+  <text x="1025" y="646" text-anchor="middle" class="title">MCP サーバー</text>
+  <text x="1025" y="664" text-anchor="middle" class="sub">送信元IPで許可判定</text>
+  <text x="1025" y="682" text-anchor="middle" class="mono-sub">(外部・Azure外)</text>
+
+  <!-- Admin PC -->
+  <rect x="930" y="60" width="190" height="86" rx="10" class="box-ext" />
+  <text x="1025" y="88" text-anchor="middle" class="title">あなたのPC</text>
+  <text x="1025" y="106" text-anchor="middle" class="sub">admin_source_cidr</text>
+  <text x="1025" y="124" text-anchor="middle" class="mono-sub">(外部・Azure外)</text>
+
+  <path d="M930,102 L905,102 L905,64 L265,64 L265,90" class="line-admin" marker-end="url(#arrow-admin)" />
+  <text x="600" y="56" text-anchor="middle" class="flow" fill="#0A66A6">HTTPS・許可IPのみ</text>
+</svg>

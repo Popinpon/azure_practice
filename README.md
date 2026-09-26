@@ -15,6 +15,14 @@ NAT Gateway を構築します。
 - Standard Agent Setup の必須BYORリソース: Cosmos DB(自前作成・Serverless) / AI Search(Basic) / Storage Account
 - 動作確認用の踏み台VMは不要(パブリックアクセスをIP制限しているため、自分の端末から直接呼べる)
 
+## アーキテクチャ
+
+![アーキテクチャ図](docs/architecture.svg)
+
+- **青**: 管理者PC → AI Foundry パブリックエンドポイント(`admin_source_cidr` のみ許可)
+- **グレー破線**: Agent runtime ↔ Cosmos DB / AI Search / Storage(Private Link・VNet内部)
+- **オレンジ**: Agent runtime → NAT Gateway → MCPサーバー(送信元IP固定。この検証の本題)
+
 ## 前提
 
 - `az login` 済みであること
