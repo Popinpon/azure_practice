@@ -3,13 +3,12 @@
 Foundry Agent(MCPツール呼び出し)の送信元IPを固定し、MCPサーバー側で許可リストとして
 使えるようにするための構成。受信・内部通信・送信の3つの経路に分けて説明する。
 
-![アーキテクチャ図](architecture.svg)
+![アーキテクチャ図](architecture.png)
 
 編集用の draw.io ソース([architecture.drawio](architecture.drawio))も用意した。
-Microsoft公式の Azure Architecture Icons(draw.io 同梱ライブラリ)を使っており、
-[draw.io](https://app.diagrams.net/) や VS Code の Draw.io Integration 拡張で開いて編集できる。
-上の `architecture.svg` はこのファイルとは別の手描きSVGなので、公式アイコン版に差し替えたい場合は
-`architecture.drawio` を開いて内容を確認のうえ SVG としてエクスポートし、`architecture.svg` を置き換えること。
+Microsoft公式の Azure Architecture Icons(draw.io 同梱ライブラリ)を使っている。
+[draw.io](https://app.diagrams.net/) や VS Code の Draw.io Integration 拡張で開いて編集し、
+変更したら `architecture.png` としてエクスポートし直すこと。
 
 ## 通信経路
 

@@ -29,7 +29,7 @@ NAT Gateway を構築します。
 Agentの送信元IPをNAT Gatewayで固定し、受信・内部通信・送信の3経路に分けて構成している。
 図と各経路の詳細は [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) を参照。
 
-![アーキテクチャ図](docs/architecture.svg)
+![アーキテクチャ図](docs/architecture.png)
 
 ## 前提
 
