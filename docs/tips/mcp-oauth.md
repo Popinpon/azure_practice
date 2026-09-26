@@ -167,3 +167,32 @@ Foundryの「managed OAuth」(Microsoft/MCPサーバー発行元がOAuthアプ�
 は、既知のMicrosoftオーディエンス向けトークンをカスタム/サードパーティMCPサーバーに
 渡そうとすると`Cannot pass Microsoft token to untrusted MCP endpoint.`で拒否される。
 自前のMCPサーバーに繋ぐ場合は、自分のEntraアプリ登録を使う**Custom OAuth**一択になる。
+
+### `project_connection_id`を使わず、`MCPTool.authorization`にトークンを直接渡す方式もある
+
+ここまでの手順はすべて、Foundry Portalで作った**connection**(`project_connection_id`)
+経由でOAuth Identity Passthroughを使う前提だった。しかし`MCPTool`(Python SDK:
+`azure.ai.projects.models.MCPTool`)には、それとは別に以下のフィールドがある。
+
+```
+authorization: Optional[str]   # MCPサーバーに渡すOAuthアクセストークンを直接指定
+headers: Optional[dict[str, str]]  # 任意のカスタムヘッダー
+```
+
+`project_connection_id`の代わりにこの`authorization`(または`headers`でAuthorization
+ヘッダーを直接組み立てる)を使うと、**Foundry Portal側のconnection作成もconsentフロー
+(`oauth_consent_request`)も一切経由せず**、アプリ側で事前に取得したトークンをそのまま
+MCPサーバー呼び出しに使わせられる。実機で確認済み(`scripts/run-mcp-agent-direct-token.py`)
+で、`mcp_list_tools`→`mcp_call`まで一発で成功する。
+
+この方式が有効なユースケース: **Foundryを呼び出す側の身元(RBAC対象)はマネージドID
+などシンプルなもの1つに保ちつつ、MCPサーバー側の権限だけをエンドユーザーごとに変えたい**
+場合。`project_connection_id`方式だと、OAuth Identity Passthroughのconsent紐づけ
+キーが「Foundryを呼んでいるプリンシパル」になってしまうため、呼び出し元を単一の
+マネージドIDに統一すると、MCPサーバー側の権限もユーザー間で共有されてしまう(consentを
+最初にした1人のトークンを全員が使い回す形になる)。`authorization`に自前で用意した
+ユーザーごとのトークンを都度渡せば、この制約を回避できる。
+
+トレードオフとして、トークンの取得(誰のどんなスコープのトークンをどう取るか)・
+有効期限切れ時のリフレッシュは、Foundryに任せず**アプリ側が自前で全部面倒を見る**
+必要がある(Foundryの自動リフレッシュ・consent管理の恩恵を受けられない)。

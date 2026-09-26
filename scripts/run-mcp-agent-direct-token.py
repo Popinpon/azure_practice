@@ -1,0 +1,157 @@
+#!/usr/bin/env python3
+"""project_connection_id(Foundry管理のOAuth Identity Passthrough)を使わず、
+`MCPTool.authorization`に自前で取得したアクセストークンを直接渡す方式を試す。
+
+Webアプリ側で「Foundryを呼ぶ身元(マネージドIDなど)」と「MCPサーバー向けの
+ユーザーごとのトークン」を分離したい場合、project_connection_idによる
+consent紐づけではなく、こちらの`authorization`(または`headers`)フィールドに
+アプリ側で用意したトークンをリクエストごとに直接渡す、という構成が使える
+(docs/tips/mcp-oauth.md 参照)。
+
+このスクリプトはMCPサーバー(shinkansen-mcp-client、public client・PKCE)に対して
+MSALのデバイスコードフローで直接ユーザートークンを取得し、それを
+`MCPTool(authorization=...)`に渡してAgentを呼ぶ。oauth_consent_requestは
+出ないはず(Foundry側のconnection管理を経由しないため)。
+
+依存: pip install msal azure-identity azure-ai-projects python-dotenv
+
+使い方 (uv sync 済み、scripts/ ディレクトリで実行すること):
+  cd scripts
+  uv run ./run-mcp-agent-direct-token.py
+"""
+
+import argparse
+import os
+import sys
+
+import msal
+from azure.ai.projects import AIProjectClient
+from azure.ai.projects.models import MCPTool, PromptAgentDefinition
+from azure.identity import DefaultAzureCredential
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+def get_mcp_token(tenant_id: str, client_id: str, scope: str) -> str:
+    """MCPサーバー向けのアクセストークンを、デバイスコードフローで取得する。"""
+    app = msal.PublicClientApplication(
+        client_id, authority=f"https://login.microsoftonline.com/{tenant_id}"
+    )
+    flow = app.initiate_device_flow(scopes=[scope])
+    if "user_code" not in flow:
+        raise RuntimeError(f"デバイスコードフローの開始に失敗: {flow}")
+    print(flow["message"])
+    result = app.acquire_token_by_device_flow(flow)
+    if "access_token" not in result:
+        raise RuntimeError(f"トークン取得に失敗: {result}")
+    return result["access_token"]
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "--endpoint", default=os.environ.get("FOUNDRY_ENDPOINT", ""), required=False
+    )
+    parser.add_argument(
+        "--project", default=os.environ.get("FOUNDRY_PROJECT", "closed-project")
+    )
+    parser.add_argument("--model", default=os.environ.get("FOUNDRY_MODEL", "gpt-5.6-luna"))
+    parser.add_argument(
+        "--agent-name",
+        default=os.environ.get("FOUNDRY_AGENT_NAME", "mcp-direct-token-agent"),
+    )
+    parser.add_argument(
+        "--server-label", default=os.environ.get("MCP_SERVER_LABEL", "shinkansen")
+    )
+    parser.add_argument(
+        "--server-url", default=os.environ.get("TF_VAR_mcp_server_url", "")
+    )
+    parser.add_argument(
+        "--mcp-tenant-id",
+        default=os.environ.get("MCP_TENANT_ID", ""),
+        help="MCPサーバー側のOAuthアプリが登録されているテナントID",
+    )
+    parser.add_argument(
+        "--mcp-client-id",
+        default=os.environ.get("MCP_CLIENT_ID", ""),
+        help="MCPサーバー側のOAuthアプリのクライアントID(public client)",
+    )
+    parser.add_argument(
+        "--mcp-scope",
+        default=os.environ.get("MCP_SCOPE", ""),
+        help="MCPサーバー向けに要求するスコープ",
+    )
+    parser.add_argument(
+        "--input",
+        default=os.environ.get(
+            "AGENT_INPUT", "MCPサーバーで使えるツールを一覧して、1つ試しに呼び出してください。"
+        ),
+    )
+    args = parser.parse_args()
+
+    missing = [
+        env_name
+        for value, env_name in [
+            (args.endpoint, "FOUNDRY_ENDPOINT (--endpoint)"),
+            (args.server_url, "TF_VAR_mcp_server_url (--server-url)"),
+            (args.mcp_tenant_id, "MCP_TENANT_ID (--mcp-tenant-id)"),
+            (args.mcp_client_id, "MCP_CLIENT_ID (--mcp-client-id)"),
+            (args.mcp_scope, "MCP_SCOPE (--mcp-scope)"),
+        ]
+        if not value
+    ]
+    if missing:
+        parser.error(
+            "以下の値が.envにも--オプションにも指定されていません: " + ", ".join(missing)
+        )
+    return args
+
+
+def main() -> int:
+    args = parse_args()
+
+    print("MCPサーバー向けトークンを取得します(デバイスコードフロー)...")
+    mcp_token = get_mcp_token(args.mcp_tenant_id, args.mcp_client_id, args.mcp_scope)
+    print("トークン取得完了。")
+
+    project_endpoint = args.endpoint.rstrip("/") + "/api/projects/" + args.project
+    project = AIProjectClient(
+        endpoint=project_endpoint,
+        credential=DefaultAzureCredential(),
+        allow_preview=True,
+    )
+    openai_client = project.get_openai_client()
+
+    tool = MCPTool(
+        server_label=args.server_label,
+        server_url=args.server_url,
+        require_approval="never",
+        authorization=mcp_token,  # project_connection_idは使わない
+    )
+
+    agent = project.agents.create_version(
+        agent_name=args.agent_name,
+        definition=PromptAgentDefinition(
+            model=args.model,
+            instructions="MCPサーバーのツールを必要に応じて使ってください。",
+            tools=[tool],
+        ),
+    )
+    print(f"agent: {agent.name} (version {agent.version})")
+
+    response = openai_client.responses.create(
+        input=args.input,
+        extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
+    )
+
+    print(f"response id: {response.id}")
+    for item in response.output:
+        print(f"- type={item.type}: {item}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
