@@ -7,9 +7,6 @@
 
 - `az login` 済みであること
 - 対象のリソースグループが存在すること(このコードでは作成しません。既存のものを利用します)
-- (既定の `location = japaneast` / `model_name = gpt-6-luna` のまま使う場合は確認不要。
-  変更する場合のみ)利用するモデルが対象リージョンで提供されていること
-  - `az cognitiveservices model list --location <region>` で確認できます
 - **以下のリソースプロバイダーがサブスクリプションに登録済みであること**
 
   未登録のまま`apply`すると、ARMはリクエストを一旦受理してしまい、Standard Agent
