@@ -44,12 +44,23 @@ Private Endpointを作っても到達できない。
 MCP サーバー側は、この NAT Gateway の Public IP(`terraform output nat_gateway_public_ip`)
 1つだけを許可リストに登録すればよい。
 
+厳密には、MCPツール呼び出し(tool server呼び出し)はAgentランタイム(Micro VM)から
+直接ではなく、**プロジェクトごとに1つ配置される「シングルテナント データ プロキシ」**
+という基盤コンポーネント経由でルーティングされる。このデータプロキシもMicro VMと同じ
+`snet-agent` からIPを消費する([Deep dive into Foundry Agent Service networking](https://learn.microsoft.com/azure/foundry/agents/concepts/agents-networking-deep-dive)参照)。
+どちらも同じサブネットに属する以上、外部への送信経路(NAT Gateway)は変わらない。
+
 ## サブネット構成
 
 | サブネット | CIDR | 用途 |
 |---|---|---|
 | `snet-private-endpoints` | `10.20.0.0/24` | AI Foundry / Cosmos DB / AI Search / Storage の Private Endpoint |
-| `snet-agent` | `10.20.2.0/27` | Agent runtime。`Microsoft.App/environments` 委任、既定送信経路なし |
+| `snet-agent` | `10.20.2.0/27` | Agent runtime + データプロキシ。`Microsoft.App/environments` 委任、既定送信経路なし |
+
+`/27`は公式ドキュメントが挙げる**最小サイズ**(目安コンカレントセッション数 約20)で、
+このリポジトリのような単発の検証用途を想定している。本番運用では余裕を持って
+`/24`以上を推奨、`/27`は避けるようにと明記されている
+([Deep dive into Foundry Agent Service networking](https://learn.microsoft.com/azure/foundry/agents/concepts/agents-networking-deep-dive)のSubnet sizing参照)。
 
 ## 図中の凡例
 
@@ -63,7 +74,11 @@ MCP サーバー側は、この NAT Gateway の Public IP(`terraform output nat_
   BYOリソース(Storage / AI Search / Cosmos DB)がなぜ必須なのかの一次情報
 - [Foundry Agent Service のプライベート ネットワークを設定する](https://learn.microsoft.com/ja-jp/azure/foundry/agents/how-to/virtual-networks) —
   VNet injection・サブネット委任・DNSゾーン構成(本リポジトリの6ゾーンと対応)・
-  Bastion/VPN/ExpressRouteでのアクセス方法・トラブルシューティングまで一次情報として詳しい
+  Bastion/VPN/ExpressRouteでのアクセス方法・トラブルシューティングまで、設定手順の一次情報
+- [Deep dive into Foundry Agent Service networking](https://learn.microsoft.com/azure/foundry/agents/concepts/agents-networking-deep-dive) —
+  上記の設定手順の背景にあるネットワークアーキテクチャ(データプロキシ・Micro VM)、
+  サブネットサイジング、IP割り当てモデルの一次情報。なぜBring Your Own VNetを選んだかの
+  裏付け(Managed VNetでは自前Firewall/NAT Gatewayを持ち込めない)もここに書かれている
 - [docs/tips/terraform.md](tips/terraform.md) — Terraform/AVMモジュールのハマりどころ
 - [docs/tips/azure.md](tips/azure.md) — Azure運用のTips
 - [docs/tips/mcp-oauth.md](tips/mcp-oauth.md) — AgentからMCPサーバーへのOAuth接続のハマりどころ
