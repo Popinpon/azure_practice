@@ -4,6 +4,19 @@
 Azureサービス自体の挙動・運用面の知見をまとめる。Terraform/AVMモジュール周りの
 ハマりどころは [terraform.md](terraform.md) を参照。
 
+### 既存のFoundryリソースに、あとから送信方向のVNet injectionだけ追加することはできない
+
+[公式ドキュメント](https://learn.microsoft.com/azure/foundry/how-to/configure-private-link)に
+明記されている制約: 「委任済みのサブネットを別のサブネットに変更することはできない」
+「既存のFoundryデプロイに事後的に送信方向のVNet injectionを追加することはできない。
+送信方向のネットワーク分離を追加するにはFoundryを作り直す必要がある」。
+
+つまり`ai_foundry.tf`の`network_injections`は**最初のアカウント作成時に確定させる
+必要がある**設定で、後から「やっぱりVNet injectionを有効にしたい」と`terraform apply`
+で追加しても反映されない(そもそもTerraform的にも`create_ai_agent_service`や
+`network_injections`は実質的に作成時のみ有効なプロパティとして扱われる)。試すなら
+最初から今回の構成(BYOR + network_injections)で作ること。
+
 ### モデルの実際の提供状況は `az cognitiveservices model list` で確認するのが確実
 
 MS Learnのリージョン対応表はモデルのGAから数日〜数週間、更新が追いつかないことがある

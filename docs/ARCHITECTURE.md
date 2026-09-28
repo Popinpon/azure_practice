@@ -18,6 +18,10 @@ AI Foundry のパブリックエンドポイントは有効にしたまま、`ne
 `allowed_source_cidr` 以外からの接続を拒否している。動作確認用の踏み台VMを用意しなくても、
 手元の端末から直接 Agent API / Foundry Portal を呼べる。
 
+これは公式ドキュメントで **"Enabled from selected IP addresses"** と呼ばれている、
+Disabled(完全閉域)とEnabled(誰でもアクセス可)の中間に位置づけられた正式なパターン
+([How to configure network isolation for Microsoft Foundry](https://learn.microsoft.com/azure/foundry/how-to/configure-private-link)参照)。
+
 ### ② Agent runtime ↔ 自前で用意して使わせるリソース(Private Link・VNet内部)
 
 Agent の会話履歴・スレッド・エージェント定義(Cosmos DB)、ベクトルストア(AI Search)、
@@ -72,6 +76,12 @@ MCP サーバー側は、この NAT Gateway の Public IP(`terraform output nat_
 
 - [Set up standard agent resources for Foundry Agent Service](https://learn.microsoft.com/azure/foundry/agents/concepts/standard-agent-setup) —
   BYOリソース(Storage / AI Search / Cosmos DB)がなぜ必須なのかの一次情報
+- [How to configure network isolation for Microsoft Foundry](https://learn.microsoft.com/azure/foundry/how-to/configure-private-link) —
+  「受信(Foundryリソース)」「送信(Foundryリソース)」「送信(Agentクライアント)」の3領域で
+  ネットワーク分離を考える、という本ドキュメントの①②③の分け方の元ネタ。① の
+  パブリック+IP制限は公式で **"Enabled from selected IP addresses"** と呼ばれる正式な
+  パターンであること、MCPツールの対応状況一覧、「既存Foundryへの事後的な送信方向VNet
+  injection追加は不可・最初から構成してデプロイし直す必要がある」という制約も記載
 - [Foundry Agent Service のプライベート ネットワークを設定する](https://learn.microsoft.com/ja-jp/azure/foundry/agents/how-to/virtual-networks) —
   VNet injection・サブネット委任・DNSゾーン構成(本リポジトリの6ゾーンと対応)・
   Bastion/VPN/ExpressRouteでのアクセス方法・トラブルシューティングまで、設定手順の一次情報
